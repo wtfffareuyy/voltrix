@@ -537,7 +537,7 @@
                 <span>/ 5</span>
             </span>
             <span class="text-gray-700">|</span>
-            <span id="reviewCount">Based on 200+ reviews</span>
+            <span id="reviewCount">No reviews yet</span>
         </div>
     </section>
 
@@ -579,111 +579,47 @@
         </div>
     </section>
 
-    <section id="antivirus" class="py-20 px-4 max-w-7xl mx-auto">
+        <section id="security" class="py-20 px-4 max-w-7xl mx-auto">
         <div class="mb-10">
             <div class="accent-line w-12 mb-4"></div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Windows Defender flagging Voltrix?</h2>
-            <p class="text-gray-500 text-sm max-w-2xl">Since Voltrix is a new unsigned executable, Windows Defender SmartScreen may show a warning. This is normal and does not mean the file is malicious.</p>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Security &amp; verification</h2>
+            <p class="text-gray-500 text-sm max-w-2xl">Voltrix is a beta build. Here is how to check it before running it &mdash; and we never ask you to turn off your antivirus.</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-            <div class="panel p-6 rounded-lg">
-                <div class="flex items-start gap-4">
-                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 flex-shrink-0">
-                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-semibold text-white mb-2">Why does this happen?</h3>
-                        <p class="text-sm text-gray-400 leading-relaxed mb-3">
-                            Microsoft Defender SmartScreen checks the reputation of downloaded files. A new, unsigned executable starts with zero reputation and may trigger a "Windows protected your PC" warning. This is not a virus detection — it's a reputation check. Signed files from known publishers skip this warning, but code signing certificates cost money and take time to set up.
-                        </p>
-                        <p class="text-sm text-gray-400 leading-relaxed">
-                            Voltrix does <strong class="text-white">not</strong> modify system files maliciously, inject into processes, or contain malware. The optimizations are registry tweaks and power plan changes that are reversible.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="panel p-6 rounded-lg">
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0">
                         <i class="fa-solid fa-shield-halved text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-semibold text-white mb-2">Is it safe?</h3>
+                        <h3 class="text-base font-semibold text-white mb-2">Verify before you run</h3>
                         <p class="text-sm text-gray-400 leading-relaxed mb-3">
-                            Yes — if you downloaded Voltrix from the official link on this page. The warning appears because the file is new, not because it contains malware. However, you should <strong class="text-white">never</strong> disable Windows Defender entirely or run files from untrusted sources.
+                            Scan the file on <strong class="text-white">VirusTotal</strong> and compare the published SHA-256 hash with the one on our Discord. If they match, the file you downloaded is the one we released.
                         </p>
                         <p class="text-sm text-gray-400 leading-relaxed">
-                            You can verify the file hash on our Discord if you want to be extra sure. We also recommend scanning the file on VirusTotal before running it.
+                            Keep Windows Defender and your antivirus fully enabled. We do <strong class="text-white">not</strong> ask you to disable protection or add exclusions.
                         </p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <h3 class="text-xl font-bold text-white mb-5">How to run Voltrix step by step</h3>
-
-        <div class="space-y-3">
-            <div class="step-card p-4 rounded-lg flex items-start gap-4">
-                <div class="step-number">1</div>
-                <div class="flex-1">
-                    <h4 class="text-sm font-semibold text-white mb-1">Download the file</h4>
-                    <p class="text-sm text-gray-400">Click the Download button on this page. The file will be saved to your Downloads folder.</p>
-                </div>
-            </div>
-
-            <div class="step-card p-4 rounded-lg flex items-start gap-4">
-                <div class="step-number">2</div>
-                <div class="flex-1">
-                    <h4 class="text-sm font-semibold text-white mb-1">If you see "Windows protected your PC"</h4>
-                    <p class="text-sm text-gray-400 mb-2">Click <strong class="text-white">More info</strong> on the warning dialog, then click <strong class="text-white">Run anyway</strong>. This tells Windows you trust the file.</p>
-                    <p class="text-xs text-gray-500 mb-3">This option appears only if SmartScreen flagged the file. If you don't see it, the file ran normally.</p>
-                    <div class="step-image">
-                        <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.redcort.com%2Fassets%2Fimgs%2Fpages%2Fblog%2F2018%2Fwindows-defender.png&f=1&nofb=1&ipt=a0a928f666ac37a2acb44ee557e1be3a0af38a7cd3fc9545ff1410c10bfbd530&ipo=images" alt="Windows Defender SmartScreen warning with More info and Run anyway">
+            <div class="panel p-6 rounded-lg">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 flex-shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-semibold text-white mb-2">SmartScreen warning?</h3>
+                        <p class="text-sm text-gray-400 leading-relaxed mb-3">
+                            A new, unsigned build can trigger a SmartScreen reputation prompt. If that worries you, don't run it &mdash; verify the hash first, or wait for a signed release.
+                        </p>
+                        <p class="text-sm text-gray-400 leading-relaxed">
+                            We're working on a code-signing certificate so future builds are signed and this prompt disappears for everyone.
+                        </p>
                     </div>
                 </div>
             </div>
-
-            <div class="step-card p-4 rounded-lg flex items-start gap-4">
-                <div class="step-number">3</div>
-                <div class="flex-1">
-                    <h4 class="text-sm font-semibold text-white mb-1">If Windows Defender quarantines the file</h4>
-                    <p class="text-sm text-gray-400 mb-2">Open <strong class="text-white">Windows Security</strong> → <strong class="text-white">Virus & threat protection</strong> → <strong class="text-white">Protection history</strong>. Find the Voltrix entry, click it, and select <strong class="text-white">Allow</strong> or <strong class="text-white">Restore</strong>.</p>
-                </div>
-            </div>
-
-            <div class="step-card p-4 rounded-lg flex items-start gap-4">
-                <div class="step-number">4</div>
-                <div class="flex-1">
-                    <h4 class="text-sm font-semibold text-white mb-1">Add an exclusion (recommended)</h4>
-                    <p class="text-sm text-gray-400 mb-2">To prevent Windows Defender from scanning Voltrix every time you launch it, add an exclusion:</p>
-                    <ol class="text-sm text-gray-400 space-y-1 list-decimal list-inside ml-1">
-                        <li>Open <strong class="text-white">Windows Security</strong> from the Start menu.</li>
-                        <li>Click <strong class="text-white">Virus & threat protection</strong>.</li>
-                        <li>Under "Virus & threat protection settings", click <strong class="text-white">Manage settings</strong>.</li>
-                        <li>Scroll down to <strong class="text-white">Exclusions</strong> and click <strong class="text-white">Add or remove exclusions</strong>.</li>
-                        <li>Click <strong class="text-white">Add an exclusion</strong> → <strong class="text-white">File</strong> (or <strong class="text-white">Folder</strong>).</li>
-                        <li>Select the Voltrix executable (or its folder) and confirm.</li>
-                    </ol>
-                    <p class="text-xs text-gray-500 mt-2">Exclusions reduce security for the excluded item. Only exclude files you trust.</p>
-                </div>
-            </div>
-
-            <div class="step-card p-4 rounded-lg flex items-start gap-4">
-                <div class="step-number">5</div>
-                <div class="flex-1">
-                    <h4 class="text-sm font-semibold text-white mb-1">Run Voltrix</h4>
-                    <p class="text-sm text-gray-400">Double-click the executable. Windows may still show a UAC prompt asking for administrator permission (Voltrix needs admin rights to apply system tweaks). Click <strong class="text-white">Yes</strong>.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-8 p-4 rounded-lg bg-voltrix-accent/5">
-            <p class="text-xs text-gray-400 leading-relaxed">
-                <i class="fa-solid fa-circle-info text-voltrix-accent mr-1"></i>
-                <strong class="text-white">Developer note:</strong> To permanently remove these warnings, Voltrix would need a code signing certificate (OV or EV) from a trusted certificate authority. This costs several hundred dollars per year and requires identity verification. For a free beta, this is not feasible. The warning will naturally disappear as more users download and run the file without issues, building reputation over time.
-            </p>
         </div>
     </section>
 
@@ -724,7 +660,7 @@
             <div class="flex items-center gap-5">
                 <a href="#features" class="hover:text-white transition-colors">Features</a>
                 <a href="#licenses" class="hover:text-white transition-colors">Licenses</a>
-                <a href="#antivirus" class="hover:text-white transition-colors">Antivirus Help</a>
+                <a href="#security" class="hover:text-white transition-colors">Security</a>
                 <button id="openTerms" class="hover:text-white transition-colors">Terms of Service</button>
                 <a href="#download" class="hover:text-white transition-colors">Download</a>
                 <a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="hover:text-voltrix-accent transition-colors flex items-center gap-1">
@@ -1253,50 +1189,7 @@
 
         const STORAGE_KEY = 'voltrix_reviews';
 
-        const defaultReviews = [
-            {
-                author: 'Luca_MainR6',
-                role: 'Rainbow Six Siege player',
-                text: 'Ho guadagnato circa 40 FPS stabili su R6 dopo il profilo premium. Il ping è sceso da 45 a 28ms. Non pensavo funzionasse davvero.',
-                rating: 5,
-                date: '2 weeks ago'
-            },
-            {
-                author: 'CS2Grinder',
-                role: 'Counter-Strike 2 player',
-                text: 'The CS2 profile removed all the stutter I had in smoke fights. Interface is clean and it does not run in background.',
-                rating: 5,
-                date: '1 month ago'
-            },
-            {
-                author: 'FragMento',
-                role: 'Fortnite player',
-                text: 'La libreria unificata è comodissima: apro tutto da Voltrix senza toccare Epic ogni volta. Peccato per il prezzo delle licenze, ma li vale.',
-                rating: 4,
-                date: '3 weeks ago'
-            },
-            {
-                author: 'SilentSniper',
-                role: 'Warzone / GTA player',
-                text: 'Il modulo rete mi ha sistemato il packet loss che avevo da mesi. Supporto Discord rapidissimo quando ho avuto un problema.',
-                rating: 5,
-                date: '5 days ago'
-            },
-            {
-                author: 'OldSchoolGamer',
-                role: 'Sea of Thieves player',
-                text: 'Simple, no bloatware, no background RAM. Exactly what I wanted from an optimizer. Would love more game profiles.',
-                rating: 4,
-                date: '2 months ago'
-            },
-            {
-                author: 'DeadByNerd',
-                role: 'Dead by Daylight player',
-                text: 'DBD gira molto più fluido. L\'unica cosa: vorrei poter salvare preset diversi per gioco. Per il resto top.',
-                rating: 4,
-                date: '1 week ago'
-            }
-        ];
+        const defaultReviews = [];
 
         function loadReviews() {
             try {
@@ -1469,6 +1362,8 @@
             updateStars(0);
             closeModal(reviewModal);
         });
+        
+
     </script>
 </body>
 </html>
