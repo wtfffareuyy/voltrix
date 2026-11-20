@@ -1,1369 +1,922 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voltrix — PC Performance Optimizer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        voltrix: {
-                            bg: '#08090a',
-                            surface: '#0f1113',
-                            card: '#131517',
-                            muted: '#6b7280',
-                            accent: '#4f8cff'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #08090a;
-            color: #d1d5db;
-            overflow-x: hidden;
-        }
-
-        #bg-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        .panel { background: #0f1113; }
-
-        .panel-card {
-            background: #131517;
-            transition: background 0.2s ease;
-        }
-
-        .panel-card:hover { background: #17191c; }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #08090a; }
-        ::-webkit-scrollbar-thumb { background: #1e2124; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #2a2e33; }
-
-        .accent-line {
-            background: linear-gradient(90deg, #4f8cff 0%, transparent 100%);
-            height: 1px;
-        }
-
-        .status-dot { box-shadow: 0 0 6px rgba(52, 211, 153, 0.5); }
-
-        .game-stage {
-            position: relative;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 12px;
-            min-height: 420px;
-            padding-top: 20px;
-            overflow: hidden;
-        }
-
-        .game-main {
-            flex: 1;
-            max-width: 720px;
-            transition: opacity 0.35s ease, transform 0.35s ease;
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .game-main.switching { opacity: 0; transform: scale(0.97); }
-
-        .game-side {
-            width: 120px;
-            flex-shrink: 0;
-            opacity: 0.4;
-            transition: opacity 0.3s ease;
-            cursor: pointer;
-            display: none;
-            margin-top: 40px;
-        }
-
-        .game-side:hover { opacity: 0.7; }
-
-        @media (min-width: 768px) { .game-side { display: block; width: 160px; } }
-        @media (min-width: 1024px) { .game-side { width: 220px; } }
-
-        .nav-arrow { transition: color 0.2s ease, opacity 0.2s ease; }
-        .nav-arrow:hover { color: #fff; }
-
-        .game-cover { transition: filter 0.3s ease; filter: grayscale(15%) brightness(0.9); }
-        .game-cover:hover { filter: grayscale(0%) brightness(1); }
-
-        .game-title { transition: opacity 0.35s ease; }
-        .game-title.switching { opacity: 0; }
-
-        #reviewsContainer { max-height: 180px; overflow-y: auto; }
-        #reviewsContainer::-webkit-scrollbar { width: 4px; }
-        #reviewsContainer::-webkit-scrollbar-thumb { background: #2a2e33; border-radius: 2px; }
-
-        .launcher-stage {
-            position: relative;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 12px;
-            min-height: 300px;
-            padding-top: 20px;
-            overflow: hidden;
-        }
-
-        .launcher-main {
-            flex: 1;
-            max-width: 720px;
-            transition: opacity 0.35s ease, transform 0.35s ease;
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .launcher-main.switching { opacity: 0; transform: scale(0.97); }
-
-        .launcher-side {
-            width: 120px;
-            flex-shrink: 0;
-            opacity: 0.4;
-            transition: opacity 0.3s ease;
-            cursor: pointer;
-            display: none;
-            margin-top: 40px;
-        }
-
-        .launcher-side:hover { opacity: 0.7; }
-
-        @media (min-width: 768px) { .launcher-side { display: block; width: 160px; } }
-        @media (min-width: 1024px) { .launcher-side { width: 220px; } }
-
-        .launcher-title { transition: opacity 0.35s ease; }
-        .launcher-title.switching { opacity: 0; }
-
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            z-index: 100;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-
-        .modal-backdrop.active { display: flex; }
-
-        .modal-content {
-            background: #131517;
-            max-width: 640px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
-            border-radius: 0.5rem;
-        }
-
-        .modal-content::-webkit-scrollbar { width: 6px; }
-        .modal-content::-webkit-scrollbar-thumb { background: #2a2e33; border-radius: 3px; }
-
-        .star-input { cursor: pointer; transition: color 0.15s ease; color: #2a2e33; }
-        .star-input.active, .star-input:hover { color: #fbbf24; }
-
-        .form-input {
-            background: #0f1113;
-            border: none;
-            outline: none;
-            color: #d1d5db;
-            width: 100%;
-            padding: 0.625rem 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-        }
-
-        .form-input::placeholder { color: #4b5563; }
-        .form-input:focus { background: #17191c; }
-
-        .step-card {
-            background: #131517;
-            transition: background 0.2s ease;
-        }
-
-        .step-card:hover { background: #17191c; }
-
-        .step-number {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(79, 140, 255, 0.1);
-            color: #4f8cff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .step-image {
-            width: 100%;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            margin-top: 0.75rem;
-            background: #0f1113;
-        }
-
-        .step-image img {
-            width: 100%;
-            display: block;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voltrix Optimizer</title>
+<link rel="icon" href="https://cdn.corenexis.com/f/b2y0oAps.png" type="image/png">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>tailwind.config={theme:{extend:{colors:{voltrix:{bg:'#08090a',surface:'#0f1113',card:'#131517',muted:'#6b7280',accent:'#4f8cff'}},fontFamily:{sans:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
+<style>
+body{background-color:#08090a;color:#d1d5db;overflow-x:hidden}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.panel{background:#0f1113}
+.panel-card{background:#131517;transition:background .2s ease}
+.panel-card:hover{background:#17191c}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:#08090a}
+::-webkit-scrollbar-thumb{background:#1e2124;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#2a2e33}
+.accent-line{background:linear-gradient(90deg,#4f8cff 0,transparent 100%);height:1px}
+.status-dot{box-shadow:0 0 6px rgba(52,211,153,.5)}
+.game-stage{position:relative;display:flex;align-items:flex-start;justify-content:center;gap:12px;min-height:420px;padding-top:20px;overflow:hidden}
+.game-main{flex:1;max-width:720px;transition:opacity .35s ease,transform .35s ease;opacity:1;transform:scale(1)}
+.game-main.switching{opacity:0;transform:scale(.97)}
+.game-side{width:120px;flex-shrink:0;opacity:.4;transition:opacity .3s ease;cursor:pointer;display:none;margin-top:40px}
+.game-side:hover{opacity:.7}
+@media(min-width:768px){.game-side{display:block;width:160px}}
+@media(min-width:1024px){.game-side{width:220px}}
+.nav-arrow{transition:color .2s ease,opacity .2s ease}
+.nav-arrow:hover{color:#fff}
+.game-cover{transition:filter .3s ease;filter:grayscale(15%) brightness(.9)}
+.game-cover:hover{filter:grayscale(0) brightness(1)}
+.game-title{transition:opacity .35s ease}
+.game-title.switching{opacity:0}
+#reviewsContainer{max-height:180px;overflow-y:auto}
+#reviewsContainer::-webkit-scrollbar{width:4px}
+#reviewsContainer::-webkit-scrollbar-thumb{background:#2a2e33;border-radius:2px}
+.launcher-stage{position:relative;display:flex;align-items:flex-start;justify-content:center;gap:12px;min-height:300px;padding-top:20px;overflow:hidden}
+.launcher-main{flex:1;max-width:720px;transition:opacity .35s ease,transform .35s ease;opacity:1;transform:scale(1)}
+.launcher-main.switching{opacity:0;transform:scale(.97)}
+.launcher-side{width:120px;flex-shrink:0;opacity:.4;transition:opacity .3s ease;cursor:pointer;display:none;margin-top:40px}
+.launcher-side:hover{opacity:.7}
+@media(min-width:768px){.launcher-side{display:block;width:160px}}
+@media(min-width:1024px){.launcher-side{width:220px}}
+.launcher-title{transition:opacity .35s ease}
+.launcher-title.switching{opacity:0}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-backdrop.active{display:flex}
+.modal-content{background:#131517;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;border-radius:.5rem}
+.modal-content::-webkit-scrollbar{width:6px}
+.modal-content::-webkit-scrollbar-thumb{background:#2a2e33;border-radius:3px}
+.star-input{cursor:pointer;transition:color .15s ease;color:#2a2e33}
+.star-input.active,.star-input:hover{color:#fbbf24}
+.form-input{background:#0f1113;border:none;outline:none;color:#d1d5db;width:100%;padding:.625rem .75rem;border-radius:.375rem;font-size:.875rem}
+.form-input::placeholder{color:#4b5563}
+.form-input:focus{background:#17191c}
+.step-card{background:#131517;transition:background .2s ease}
+.step-card:hover{background:#17191c}
+.step-number{width:32px;height:32px;border-radius:50%;background:rgba(79,140,255,.1);color:#4f8cff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.step-image{width:100%;border-radius:.5rem;overflow:hidden;margin-top:.75rem;background:#0f1113}
+.step-image img{width:100%;display:block}
+</style>
 </head>
 <body class="font-sans antialiased selection:bg-voltrix-accent selection:text-white">
 
-    <canvas id="bg-canvas"></canvas>
-
-    <header class="fixed top-0 left-0 w-full z-50 panel px-4 lg:px-8 py-3">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <a href="#" class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded overflow-hidden flex items-center justify-center">
-                    <img src="https://cdn.corenexis.com/f/b2y0oAps.png" alt="Voltrix" class="w-full h-full object-cover">
-                </div>
-                <span class="font-semibold text-base tracking-wide text-white">Voltrix</span>
-            </a>
-
-            <nav class="hidden md:flex items-center gap-7 text-sm text-gray-400">
-                <a href="#features" class="hover:text-white transition-colors">Features</a>
-                <a href="#games" class="hover:text-white transition-colors">Games</a>
-                <a href="#optimization" class="hover:text-white transition-colors">Optimizations</a>
-                <a href="#launchers" class="hover:text-white transition-colors">Launchers</a>
-                <a href="#reviews" class="hover:text-white transition-colors">Reviews</a>
-                <a href="#licenses" class="hover:text-white transition-colors">Licenses</a>
-                <a href="#download" class="hover:text-white transition-colors">Download</a>
-            </nav>
-
-            <div class="flex items-center gap-2">
-                <a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded hover:bg-white/5 transition-colors flex items-center justify-center text-gray-400 hover:text-voltrix-accent" title="Discord">
-                    <i class="fa-brands fa-discord"></i>
-                </a>
-                <a href="https://gofile.io/d/BkBX3mHK" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded text-sm font-medium bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-download text-xs"></i>
-                    <span class="hidden sm:inline">Download</span>
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <section class="relative pt-32 pb-20 md:pt-40 md:pb-24 px-4">
-        <div class="max-w-4xl mx-auto text-center">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded text-xs text-gray-400 mb-8 bg-white/5">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot"></span>
-                <span>v1.4.0</span>
-            </div>
-
-            <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight mb-6">
-                Maximize your gaming<br class="hidden sm:inline"/> PC's performance
-            </h1>
-
-            <p class="max-w-2xl mx-auto text-base md:text-lg text-gray-400 mb-10 leading-relaxed">
-                Unify your launchers, reduce network latency, optimize your GPU and customize your display in a single minimal interface.
-            </p>
-
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
-                <a href="https://gofile.io/d/hERjfTFh" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-6 py-3 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-download text-xs"></i>
-                    <span>Download for free</span>
-                </a>
-                <a href="#licenses" class="w-full sm:w-auto px-6 py-3 rounded text-sm font-medium bg-white/5 hover:bg-white/10 text-white transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-ticket text-xs text-gray-400"></i>
-                    <span>Get license</span>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-8 panel">
-        <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="text-center py-2">
-                <div class="text-2xl font-bold text-white font-mono">+45%</div>
-                <div class="text-xs text-gray-500 mt-1">Average FPS</div>
-            </div>
-            <div class="text-center py-2">
-                <div class="text-2xl font-bold text-white font-mono">-30ms</div>
-                <div class="text-xs text-gray-500 mt-1">Ping latency</div>
-            </div>
-            <div class="text-center py-2">
-                <div class="text-2xl font-bold text-white font-mono">100%</div>
-                <div class="text-xs text-gray-500 mt-1">Customizable</div>
-            </div>
-            <div class="text-center py-2">
-                <div class="text-2xl font-bold text-white font-mono">0MB</div>
-                <div class="text-xs text-gray-500 mt-1">Background RAM</div>
-            </div>
-        </div>
-    </section>
-
-    <section id="features" class="py-20 px-4 max-w-7xl mx-auto">
-        <div class="mb-12">
-            <div class="accent-line w-12 mb-4"></div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white">Features and optimizations</h2>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="panel-card p-5 rounded-lg">
-                <div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
-                    <i class="fa-solid fa-border-all text-sm"></i>
-                </div>
-                <h3 class="text-base font-semibold text-white mb-2">Unified game library</h3>
-                <p class="text-gray-400 text-sm leading-relaxed mb-4">
-                    Automatic scanning and quick launch of all your games in a single hub, without opening secondary launchers.
-                </p>
-                <a href="#games" class="text-xs text-voltrix-accent hover:text-[#6ba3ff] transition-colors">
-                    See supported games <i class="fa-solid fa-arrow-right text-[9px] ml-1"></i>
-                </a>
-            </div>
-
-            <div class="panel-card p-5 rounded-lg">
-                <div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
-                    <i class="fa-solid fa-layer-group text-sm"></i>
-                </div>
-                <h3 class="text-base font-semibold text-white mb-2">Multi-launcher hub</h3>
-                <p class="text-gray-400 text-sm leading-relaxed">
-                    Centralized detection of Steam, Epic Games, Rockstar, Ubisoft Connect, EA App, GOG, Riot and Battle.net.
-                </p>
-            </div>
-
-            <div class="panel-card p-5 rounded-lg">
-                <div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
-                    <i class="fa-solid fa-bolt text-sm"></i>
-                </div>
-                <h3 class="text-base font-semibold text-white mb-2">Hardware optimization</h3>
-                <p class="text-gray-400 text-sm leading-relaxed">
-                    Quick control of GPU Acceleration, Fullscreen Optimizations, Windows Game Mode and CPU power plans.
-                </p>
-            </div>
-
-            <div class="panel-card p-5 rounded-lg">
-                <div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
-                    <i class="fa-solid fa-wifi text-sm"></i>
-                </div>
-                <h3 class="text-base font-semibold text-white mb-2">Ping and network reducer</h3>
-                <p class="text-gray-400 text-sm leading-relaxed">
-                    Real-time ping tests, TCP stack optimization, network throttling disable and ultra-fast DNS servers.
-                </p>
-            </div>
-
-            <div id="licenses" class="panel-card p-5 rounded-lg relative bg-voltrix-accent/5">
-                <div class="absolute top-0 right-0 bg-voltrix-accent text-white text-[9px] font-semibold px-2 py-0.5 rounded-bl">PREMIUM</div>
-                <div class="w-9 h-9 rounded bg-voltrix-accent/10 flex items-center justify-center text-voltrix-accent mb-4">
-                    <i class="fa-solid fa-ticket text-sm"></i>
-                </div>
-                <h3 class="text-base font-semibold text-white mb-2">Premium licenses</h3>
-                <p class="text-gray-400 text-sm leading-relaxed mb-3">
-                    Unlock dedicated profiles for <strong class="text-white">R6 Siege</strong>, <strong class="text-white">CS2</strong> or the <strong class="text-white">Wi-Fi/Network</strong> module.
-                </p>
-                <p class="text-white font-semibold text-sm mb-4 font-mono">2.99€ each</p>
-                <a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="w-full py-2 rounded bg-voltrix-accent hover:bg-[#3d7ae8] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-brands fa-discord text-[10px]"></i> Buy via ticket
-                </a>
-            </div>
-
-            <div class="panel-card p-5 rounded-lg">
-                <div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
-                    <i class="fa-solid fa-palette text-sm"></i>
-                </div>
-                <h3 class="text-base font-semibold text-white mb-2">UI customization</h3>
-                <p class="text-gray-400 text-sm leading-relaxed">
-                    Themes, accent colors and adjustment of background sphere quantity and speed.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <section id="games" class="py-20 px-4 max-w-7xl mx-auto">
-        <div class="mb-10">
-            <div class="accent-line w-12 mb-4"></div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Supported games</h2>
-            <p class="text-gray-500 text-sm">Dedicated optimization profiles and automatic detection for the most played titles.</p>
-        </div>
-
-        <div class="relative">
-            <div class="game-stage">
-                <button id="prevBtn" class="nav-arrow absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Previous">
-                    <i class="fa-solid fa-chevron-left text-xl"></i>
-                </button>
-
-                <div id="sideLeft" class="game-side rounded-lg overflow-hidden"></div>
-
-                <div id="gameMain" class="game-main rounded-lg overflow-hidden bg-voltrix-card">
-                    <div class="aspect-[460/215] bg-voltrix-surface flex items-center justify-center relative" id="mainImageContainer">
-                        <img id="mainImage" src="" alt="" class="game-cover w-full h-full object-cover">
-                    </div>
-                    <div class="p-4">
-                        <div id="gameTitle" class="game-title">
-                            <span id="mainTitle" class="text-base font-semibold text-white"></span>
-                            <p id="mainGenre" class="text-xs text-gray-500 mt-0.5"></p>
-                        </div>
-                        <div id="reviewsContainer" class="mt-4 space-y-2"></div>
-                    </div>
-                </div>
-
-                <div id="sideRight" class="game-side rounded-lg overflow-hidden"></div>
-
-                <button id="nextBtn" class="nav-arrow absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Next">
-                    <i class="fa-solid fa-chevron-right text-xl"></i>
-                </button>
-            </div>
-
-            <div class="flex items-center justify-center gap-1.5 mt-5" id="dotsContainer"></div>
-        </div>
-
-        <p class="text-xs text-gray-600 mt-6 text-center">
-            <i class="fa-brands fa-steam mr-1"></i> Steam covers provided via public CDN. Fortnite and Roblox are detected through their respective launchers.
-        </p>
-    </section>
-
-    <section class="py-16 px-4 panel">
-        <div class="max-w-4xl mx-auto text-center">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-voltrix-accent/10 text-voltrix-accent mb-5">
-                <i class="fa-brands fa-discord text-xl"></i>
-            </div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">How to get a Premium license</h2>
-            <p class="text-gray-400 max-w-xl mx-auto mb-6 text-sm leading-relaxed">
-                Licenses for <strong class="text-white">Game Profiles (R6 Siege & CS2)</strong> and the <strong class="text-white">Wi-Fi Optimizer</strong> cost <span class="text-white font-semibold font-mono">2.99€</span> each. To purchase, join the Discord server and open a ticket to contact the owner.
-            </p>
-            <a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="inline-flex px-6 py-3 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors items-center justify-center gap-2">
-                <i class="fa-brands fa-discord text-xs"></i>
-                <span>Join Discord & open a ticket</span>
-            </a>
-        </div>
-    </section>
-
-    <section id="optimization" class="py-20 px-4 max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-                <div class="accent-line w-12 mb-4"></div>
-                <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4 leading-tight">
-                    All options under your full control
-                </h2>
-                <p class="text-gray-400 mb-8 text-sm leading-relaxed">
-                    Voltrix is not a black box: every system tweak can be individually enabled or disabled to guarantee stability and 100% of your PC's performance.
-                </p>
-
-                <div class="space-y-2">
-                    <div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-microchip text-gray-500 text-sm"></i>
-                            <span class="text-sm text-white">GPU hardware optimization</span>
-                        </div>
-                        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
-                    </div>
-
-                    <div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-expand text-gray-500 text-sm"></i>
-                            <span class="text-sm text-white">FSO (Fullscreen Optimizations)</span>
-                        </div>
-                        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
-                    </div>
-
-                    <div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-gamepad text-gray-500 text-sm"></i>
-                            <span class="text-sm text-white">Windows Game Mode</span>
-                        </div>
-                        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
-                    </div>
-
-                    <div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-wifi text-gray-500 text-sm"></i>
-                            <span class="text-sm text-white">TCP latency & network throttling</span>
-                        </div>
-                        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
-                    </div>
-
-                    <div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-bolt text-gray-500 text-sm"></i>
-                            <span class="text-sm text-white">High Performance power plan</span>
-                        </div>
-                        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-lg overflow-hidden">
-                <a href="https://ibb.co/spw5QvT6">
-                    <img src="https://i.ibb.co/j9MVGvCW/Negro.png" alt="Voltrix UI" class="w-full">
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <section id="reviews" class="py-20 px-4 max-w-7xl mx-auto">
-        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
-            <div>
-                <div class="accent-line w-12 mb-4"></div>
-                <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">What users say</h2>
-                <p class="text-gray-500 text-sm">Real feedback from the Voltrix community.</p>
-            </div>
-            <button id="openReviewModal" class="inline-flex items-center gap-2 px-4 py-2 rounded text-sm font-medium bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors self-start sm:self-auto">
-                <i class="fa-solid fa-pen text-xs"></i>
-                <span>Write a review</span>
-            </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="appReviews"></div>
-
-        <div class="mt-8 flex items-center justify-center gap-3 text-xs text-gray-500">
-            <span class="flex items-center gap-1.5">
-                <span class="text-amber-400 font-mono" id="avgStars">★★★★★</span>
-                <span class="text-white font-semibold" id="avgRating">4.8</span>
-                <span>/ 5</span>
-            </span>
-            <span class="text-gray-700">|</span>
-            <span id="reviewCount">No reviews yet</span>
-        </div>
-    </section>
-
-    <section id="launchers" class="py-20 px-4 max-w-7xl mx-auto">
-        <div class="mb-10">
-            <div class="accent-line w-12 mb-4"></div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Supported launchers</h2>
-            <p class="text-gray-500 text-sm">Automatic detection and integration with all major game launchers.</p>
-        </div>
-
-        <div class="relative">
-            <div class="launcher-stage">
-                <button id="launcherPrevBtn" class="nav-arrow absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Previous launcher">
-                    <i class="fa-solid fa-chevron-left text-xl"></i>
-                </button>
-
-                <div id="launcherSideLeft" class="launcher-side rounded-lg overflow-hidden"></div>
-
-                <div id="launcherMain" class="launcher-main rounded-lg overflow-hidden bg-voltrix-card">
-                    <div class="aspect-[460/215] bg-voltrix-surface flex items-center justify-center relative" id="launcherMainImageContainer">
-                        <img id="launcherMainImage" src="" alt="" class="game-cover w-full h-full object-cover">
-                    </div>
-                    <div class="p-4">
-                        <div id="launcherTitle" class="launcher-title">
-                            <span id="launcherMainTitle" class="text-base font-semibold text-white"></span>
-                            <p id="launcherMainStatus" class="text-xs mt-0.5"></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="launcherSideRight" class="launcher-side rounded-lg overflow-hidden"></div>
-
-                <button id="launcherNextBtn" class="nav-arrow absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Next launcher">
-                    <i class="fa-solid fa-chevron-right text-xl"></i>
-                </button>
-            </div>
-
-            <div class="flex items-center justify-center gap-1.5 mt-5" id="launcherDotsContainer"></div>
-        </div>
-    </section>
-
-        <section id="security" class="py-20 px-4 max-w-7xl mx-auto">
-        <div class="mb-10">
-            <div class="accent-line w-12 mb-4"></div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Security &amp; verification</h2>
-            <p class="text-gray-500 text-sm max-w-2xl">Voltrix is a beta build. Here is how to check it before running it &mdash; and we never ask you to turn off your antivirus.</p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="panel p-6 rounded-lg">
-                <div class="flex items-start gap-4">
-                    <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0">
-                        <i class="fa-solid fa-shield-halved text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-semibold text-white mb-2">Verify before you run</h3>
-                        <p class="text-sm text-gray-400 leading-relaxed mb-3">
-                            Scan the file on <strong class="text-white">VirusTotal</strong> and compare the published SHA-256 hash with the one on our Discord. If they match, the file you downloaded is the one we released.
-                        </p>
-                        <p class="text-sm text-gray-400 leading-relaxed">
-                            Keep Windows Defender and your antivirus fully enabled. We do <strong class="text-white">not</strong> ask you to disable protection or add exclusions.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="panel p-6 rounded-lg">
-                <div class="flex items-start gap-4">
-                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 flex-shrink-0">
-                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-semibold text-white mb-2">SmartScreen warning?</h3>
-                        <p class="text-sm text-gray-400 leading-relaxed mb-3">
-                            A new, unsigned build can trigger a SmartScreen reputation prompt. If that worries you, don't run it &mdash; verify the hash first, or wait for a signed release.
-                        </p>
-                        <p class="text-sm text-gray-400 leading-relaxed">
-                            We're working on a code-signing certificate so future builds are signed and this prompt disappears for everyone.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="download" class="py-20 px-4 max-w-4xl mx-auto">
-        <div class="panel p-10 sm:p-14 rounded-xl text-center">
-            <div class="w-12 h-12 rounded overflow-hidden flex items-center justify-center mx-auto mb-5">
-                <img src="https://cdn.corenexis.com/f/b2y0oAps.png" alt="Voltrix" class="w-full h-full object-cover">
-            </div>
-
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">Ready to transform your PC?</h2>
-            <p class="text-gray-400 text-sm max-w-lg mx-auto mb-8">
-                Download Voltrix Optimizer for Windows 10 and 11. Unlock the maximum potential of your games in seconds.
-            </p>
-
-            <a href="https://gofile.io/d/S9NqW3le" target="_blank" rel="noopener noreferrer" class="inline-flex px-8 py-3 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors items-center justify-center gap-2">
-                <i class="fa-solid fa-download text-xs"></i>
-                <span>Download Voltrix v1.4.1</span>
-            </a>
-
-            <div class="mt-5 flex items-center justify-center gap-5 text-xs text-gray-500">
-                <span class="flex items-center gap-1.5"><i class="fa-brands fa-windows text-gray-400"></i> Windows 10/11 (64-bit)</span>
-                <span class="text-gray-700">|</span>
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-emerald-500"></i> Safe and verified</span>
-            </div>
-        </div>
-    </section>
-
-    <footer class="py-8 panel text-xs text-gray-500">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-5 h-5 rounded overflow-hidden">
-                    <img src="https://cdn.corenexis.com/f/b2y0oAps.png" alt="Voltrix" class="w-full h-full object-cover">
-                </div>
-                <span class="font-semibold text-white">Voltrix</span>
-                <span class="text-gray-600">© 2026</span>
-            </div>
-
-            <div class="flex items-center gap-5">
-                <a href="#features" class="hover:text-white transition-colors">Features</a>
-                <a href="#licenses" class="hover:text-white transition-colors">Licenses</a>
-                <a href="#security" class="hover:text-white transition-colors">Security</a>
-                <button id="openTerms" class="hover:text-white transition-colors">Terms of Service</button>
-                <a href="#download" class="hover:text-white transition-colors">Download</a>
-                <a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="hover:text-voltrix-accent transition-colors flex items-center gap-1">
-                    <i class="fa-brands fa-discord"></i> Discord
-                </a>
-            </div>
-        </div>
-    </footer>
-
-    <div id="termsModal" class="modal-backdrop">
-        <div class="modal-content p-8">
-            <div class="flex items-start justify-between mb-6">
-                <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-file-contract text-voltrix-accent text-sm"></i>
-                    Terms of Service
-                </h2>
-                <button id="closeTerms" class="text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <div class="text-sm text-gray-400 space-y-4 leading-relaxed">
-                <p><strong class="text-gray-200">1. License:</strong> Purchasing a license or downloading Voltrix grants a non-exclusive personal license for use on a single PC.</p>
-                <p><strong class="text-gray-200">2. Game licenses:</strong> The "Game Profiles" license (2.99€) unlocks specific tweaks for Rainbow Six Siege and Counter-Strike 2. <em class="text-white">Voltrix does not sell the games themselves.</em></p>
-                <p><strong class="text-gray-200">3. Wi-Fi license:</strong> The "Wi-Fi & Network Boost" license (2.99€) unlocks advanced registry tweaks. Use at your own risk.</p>
-                <p><strong class="text-gray-200">4. Refunds:</strong> Due to the digital nature of the software, all sales are final unless issues cannot be resolved via Discord.</p>
-                <p><strong class="text-gray-200">5. User reviews:</strong> By submitting a review you confirm the content is genuine and grant Voltrix the right to display it on this website. Reviews may be removed if they contain offensive or misleading content.</p>
-                <p><strong class="text-gray-200">6. Antivirus warnings:</strong> Voltrix is an unsigned executable. Windows SmartScreen may show warnings. By running Voltrix you acknowledge that you trust the source and accept responsibility for system modifications.</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="reviewModal" class="modal-backdrop">
-        <div class="modal-content p-8">
-            <div class="flex items-start justify-between mb-6">
-                <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-pen text-voltrix-accent text-sm"></i>
-                    Write a review
-                </h2>
-                <button id="closeReviewModal" class="text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <form id="reviewForm" class="space-y-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1.5">Your name</label>
-                    <input type="text" id="reviewName" class="form-input" placeholder="e.g. CS2Grinder" maxlength="30" required>
-                </div>
-
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1.5">What do you use Voltrix for?</label>
-                    <input type="text" id="reviewRole" class="form-input" placeholder="e.g. Counter-Strike 2 player" maxlength="40">
-                </div>
-
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1.5">Rating</label>
-                    <div class="flex items-center gap-1" id="starInput">
-                        <i class="fa-solid fa-star star-input text-xl" data-value="1"></i>
-                        <i class="fa-solid fa-star star-input text-xl" data-value="2"></i>
-                        <i class="fa-solid fa-star star-input text-xl" data-value="3"></i>
-                        <i class="fa-solid fa-star star-input text-xl" data-value="4"></i>
-                        <i class="fa-solid fa-star star-input text-xl" data-value="5"></i>
-                    </div>
-                    <input type="hidden" id="reviewRating" value="0">
-                </div>
-
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1.5">Your review</label>
-                    <textarea id="reviewText" class="form-input resize-none" rows="4" placeholder="Tell others how Voltrix improved your gaming experience..." maxlength="300" required></textarea>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button type="button" id="cancelReview" class="px-4 py-2 rounded text-sm text-gray-400 hover:text-white transition-colors">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors">Submit review</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
-
-        let mouse = { x: null, y: null, radius: 140 };
-
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-
-        window.addEventListener('mouseleave', () => {
-            mouse.x = null;
-            mouse.y = null;
-        });
-
-        window.addEventListener('resize', () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        });
-
-        const particles = [];
-        const particleCount = window.innerWidth < 768 ? 45 : 85;
-        const connectionDistance = 130;
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.baseRadius = Math.random() * 2 + 1.2;
-                this.radius = this.baseRadius;
-                this.alpha = Math.random() * 0.35 + 0.15;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                if (this.x < 0 || this.x > width) this.vx *= -1;
-                if (this.y < 0 || this.y > height) this.vy *= -1;
-
-                this.x = Math.max(0, Math.min(width, this.x));
-                this.y = Math.max(0, Math.min(height, this.y));
-
-                let targetRadius = this.baseRadius;
-
-                if (mouse.x !== null && mouse.y !== null) {
-                    const dx = this.x - mouse.x;
-                    const dy = this.y - mouse.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist < mouse.radius) {
-                        const shrink = 1 - (dist / mouse.radius);
-                        targetRadius = this.baseRadius * (1 - shrink * 0.7);
-                    }
-                }
-
-                this.radius += (targetRadius - this.radius) * 0.15;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, Math.max(this.radius, 0.3), 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(79, 140, 255, ${this.alpha})`;
-                ctx.fill();
-            }
-        }
-
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-        }
-
-        function drawConnections() {
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist < connectionDistance) {
-                        const alpha = (1 - dist / connectionDistance) * 0.15;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(79, 140, 255, ${alpha})`;
-                        ctx.lineWidth = 0.6;
-                        ctx.stroke();
-                    }
-                }
-
-                if (mouse.x !== null && mouse.y !== null) {
-                    const dx = particles[i].x - mouse.x;
-                    const dy = particles[i].y - mouse.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist < mouse.radius) {
-                        const alpha = (1 - dist / mouse.radius) * 0.4;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(mouse.x, mouse.y);
-                        ctx.strokeStyle = `rgba(79, 140, 255, ${alpha})`;
-                        ctx.lineWidth = 0.8;
-                        ctx.stroke();
-                    }
-                }
-            }
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = '#08090a';
-            ctx.fillRect(0, 0, width, height);
-
-            for (const p of particles) {
-                p.update();
-                p.draw();
-            }
-
-            drawConnections();
-
-            requestAnimationFrame(animate);
-        }
-
-        animate();
-    </script>
-
-    <script>
-        const games = [
-            {
-                title: 'Fortnite', genre: 'Battle Royale', type: 'image',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fprod.assets.earlygamecdn.com%2Fimages%2FFortnite-Cash-Cups.jpg%3Ftransform%3DCard%2BPublication%2BWebp&f=1&nofb=1&ipt=632eb13a5bafb87b0265f31939fbd94c47f2dd1c4361956c7a8f37708d4adb17&ipo=images',
-                reviews: [
-                    { author: 'xX_ProGamer_Xx', text: 'Best battle royale out there. Building mechanics are unmatched, and the constant updates keep it fresh.', rating: 5, playtime: '1,240 hrs' },
-                    { author: 'CasualCarl', text: 'Fun with friends but the skill gap is insane now. Still worth playing casually.', rating: 3, playtime: '87 hrs' }
-                ]
-            },
-            {
-                title: 'Roblox', genre: 'Sandbox', type: 'image',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpapers.com%2Fimages%2Fhd%2Froblox-pictures-kr9dxy2z296bf7b9.jpg&f=1&nofb=1&ipt=cd61772d2e9b4b75088fb91dd107901205cfce29cd2367332f83c130949196e7&ipo=images',
-                reviews: [
-                    { author: 'BlockyBuilder', text: 'Infinite variety of games. You can literally play anything you can imagine.', rating: 5, playtime: '2,100 hrs' },
-                    { author: 'SkepticalSam', text: 'Good for kids, but the monetization is aggressive. Quality varies wildly by game.', rating: 3, playtime: '45 hrs' }
-                ]
-            },
-            {
-                title: 'Rainbow Six Siege', genre: 'Tactical Shooter', type: 'image', src: 'https://cdn.akamai.steamstatic.com/steam/apps/359550/header.jpg',
-                reviews: [
-                    { author: 'TacticalToad', text: 'Steep learning curve but the most rewarding FPS I have ever played. Every round feels different.', rating: 5, playtime: '890 hrs' },
-                    { author: 'RageQuitRandy', text: 'Toxic community and constant balance changes. Still fun when you have a squad.', rating: 3, playtime: '210 hrs' }
-                ]
-            },
-            {
-                title: 'Counter-Strike 2', genre: 'FPS', type: 'image', src: 'https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg',
-                reviews: [
-                    { author: 'HeadshotHarry', text: 'The purest competitive FPS. No gimmicks, just aim and movement.', rating: 5, playtime: '3,400 hrs' },
-                    { author: 'SkinCollector', text: 'Gameplay is solid but the skin economy is a casino. Play for the competition, not the cases.', rating: 4, playtime: '560 hrs' }
-                ]
-            },
-            {
-                title: 'Sea of Thieves', genre: 'Adventure', type: 'image', src: 'https://cdn.akamai.steamstatic.com/steam/apps/1172620/header.jpg',
-                reviews: [
-                    { author: 'PiratePete', text: 'Sailing with friends is the best co-op experience out there. No other game feels like this.', rating: 5, playtime: '340 hrs' },
-                    { author: 'LoneWolf', text: 'Terrible solo. You will get sunk constantly. Only buy if you have a crew.', rating: 2, playtime: '25 hrs' }
-                ]
-            },
-            {
-                title: 'GTA V Enhanced', genre: 'Open World', type: 'image', src: 'https://cdn.akamai.steamstatic.com/steam/apps/3240220/header.jpg',
-                reviews: [
-                    { author: 'LosSantosLocal', text: 'The enhanced version looks great on modern hardware. Still the king of open world chaos.', rating: 5, playtime: '1,100 hrs' },
-                    { author: 'OnlineHater', text: 'Story mode is excellent. GTA Online is a grindy mess designed to sell shark cards.', rating: 3, playtime: '430 hrs' }
-                ]
-            },
-            {
-                title: 'The Forest', genre: 'Survival Horror', type: 'image', src: 'https://cdn.akamai.steamstatic.com/steam/apps/242760/header.jpg',
-                reviews: [
-                    { author: 'BaseBuilder99', text: 'Terrifying and addictive. Building your fortress while cannibals watch is unforgettable.', rating: 5, playtime: '78 hrs' },
-                    { author: 'ScaredyCat', text: 'Genuinely scary but the AI is janky. Play with friends for the best experience.', rating: 4, playtime: '32 hrs' }
-                ]
-            },
-            {
-                title: 'Dead by Daylight', genre: 'Horror', type: 'image', src: 'https://cdn.akamai.steamstatic.com/steam/apps/381210/header.jpg',
-                reviews: [
-                    { author: 'LoopMaster', text: 'Unique asymmetric multiplayer. Chases are thrilling even after hundreds of hours.', rating: 5, playtime: '1,800 hrs' },
-                    { author: 'TunneledAgain', text: 'Fun but frustrating. Balance is all over the place and solo queue is painful.', rating: 2, playtime: '150 hrs' }
-                ]
-            },
-            {
-                title: 'Subnautica', genre: 'Survival', type: 'image', src: 'https://cdn.akamai.steamstatic.com/steam/apps/264710/header.jpg',
-                reviews: [
-                    { author: 'DeepDiver', text: 'Masterpiece of atmosphere and exploration. Thalassophobia never felt so good.', rating: 5, playtime: '120 hrs' },
-                    { author: 'LandLubber', text: 'Beautiful but tedious resource gathering. Not for everyone.', rating: 3, playtime: '18 hrs' }
-                ]
-            },
-            {
-                title: 'GTA V', genre: 'Open World', type: 'image', src: 'https://cdn.akamai.steamstatic.com/steam/apps/271590/header.jpg',
-                reviews: [
-                    { author: 'TrevorDidNothingWrong', text: 'Best GTA story. The three protagonists are iconic.', rating: 5, playtime: '600 hrs' },
-                    { author: 'ModderMike', text: 'Story is great. Online is a money sink. Modding keeps it alive.', rating: 4, playtime: '980 hrs' }
-                ]
-            }
-        ];
-
-        const launchers = [
-            {
-                title: 'Steam',
-                status: 'Installed',
-                statusColor: 'text-emerald-400',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%2Fid%2FOIP.JEQ4HBnq2qrPPv6nWSWrbAHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=c6968c19020aed25c88361ea174b73e2e66ff9e6d0f71ff166c77fd76d437f81&ipo=images'
-            },
-            {
-                title: 'Epic Games',
-                status: 'Detected',
-                statusColor: 'text-gray-400',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%2Fid%2FOIP.wVTBAavRygsfTVE9sbQ6BAHaDt%3Fr%3D0%26pid%3DApi&f=1&ipt=2a56043a06d53a8c589f87246c6480c20a3c4581b479197a9d4197a8ca01d9a6&ipo=images'
-            },
-            {
-                title: 'Rockstar Games',
-                status: 'Detected',
-                statusColor: 'text-gray-400',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%2Fid%2FOIP.34kryK29m3yf4gvzy5qU_AHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=26e9218766787c5170d5cc94ec29da8f6840f5f372c2061e6077e3640502e873&ipo=images'
-            },
-            {
-                title: 'Ubisoft Connect',
-                status: 'Installed',
-                statusColor: 'text-emerald-400',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstaticctf.ubisoft.com%2FJ3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn%2F6v8ALR81SgkPhJu48ByOdo%2F7c2f1c8b10cff19155f929bb8cbd5843%2Fubi-share.jpg&f=1&nofb=1&ipt=dfd5657d9a498381fddfec8f38044b880b131793cdc7ecf4eea650c2ae421b8a&ipo=images'
-            },
-            {
-                title: 'EA App',
-                status: 'Supported',
-                statusColor: 'text-gray-400',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%2Fid%2FOIP.AMvGLLRJeo_TtQfqQqB-kQHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=e377fe3c484708fb2bf7d2f5724ab9c97c729695935b4e03f790f9b5ab83dcc1&ipo=images'
-            },
-            {
-                title: 'GOG Galaxy',
-                status: 'Supported',
-                statusColor: 'text-gray-400',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic0.gamerantimages.com%2Fwordpress%2Fwp-content%2Fuploads%2F2022%2F11%2FnITX3D9g_4x.jpg&f=1&nofb=1&ipt=b3c450ae7c31f8ae368f71a78790d843fe12ae43325dfb893b0fe9060d2775e8&ipo=images'
-            },
-            {
-                title: 'Riot Client',
-                status: 'Supported',
-                statusColor: 'text-gray-400',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%2Fid%2FOIP.ijysXX6cnHPgJdsM1JImYAHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=221b36091adcf2352e5ce20ea07d3dc208721aec7d5653811c9c943541979b30&ipo=images'
-            },
-            {
-                title: 'Battle.net',
-                status: 'Supported',
-                statusColor: 'text-gray-400',
-                src: 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fbnetcmsus-a.akamaihd.net%2Fcms%2Fblog_header%2Fax%2FAXL77SARNBXB1686342201704.jpg&f=1&nofb=1&ipt=ae0a71e608264fac35fffe7f4ea4cbc4114cc3413902931a031b0d2c9c4cdfa6&ipo=images'
-            }
-        ];
-
-        let currentIndex = 0;
-        let launcherIndex = 0;
-
-        const gameMain = document.getElementById('gameMain');
-        const mainImageContainer = document.getElementById('mainImageContainer');
-        const mainTitle = document.getElementById('mainTitle');
-        const mainGenre = document.getElementById('mainGenre');
-        const gameTitle = document.getElementById('gameTitle');
-        const reviewsContainer = document.getElementById('reviewsContainer');
-        const sideLeft = document.getElementById('sideLeft');
-        const sideRight = document.getElementById('sideRight');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const dotsContainer = document.getElementById('dotsContainer');
-
-        const launcherMain = document.getElementById('launcherMain');
-        const launcherMainImageContainer = document.getElementById('launcherMainImageContainer');
-        const launcherMainTitle = document.getElementById('launcherMainTitle');
-        const launcherMainStatus = document.getElementById('launcherMainStatus');
-        const launcherTitle = document.getElementById('launcherTitle');
-        const launcherSideLeft = document.getElementById('launcherSideLeft');
-        const launcherSideRight = document.getElementById('launcherSideRight');
-        const launcherPrevBtn = document.getElementById('launcherPrevBtn');
-        const launcherNextBtn = document.getElementById('launcherNextBtn');
-        const launcherDotsContainer = document.getElementById('launcherDotsContainer');
-
-        function renderGameReviews(reviews) {
-            reviewsContainer.innerHTML = reviews.map(review => {
-                const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-                return `
-                    <div class="p-3 rounded bg-voltrix-surface">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-xs font-medium text-white">${review.author}</span>
-                            <span class="text-[10px] text-amber-400 font-mono">${stars}</span>
-                        </div>
-                        <p class="text-xs text-gray-400 leading-relaxed">${review.text}</p>
-                        <span class="text-[10px] text-gray-600 mt-1 inline-block">${review.playtime} played</span>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderMain(game) {
-            mainImageContainer.innerHTML = `<img id="mainImage" src="${game.src}" alt="${game.title}" class="game-cover w-full h-full object-cover">`;
-            mainTitle.textContent = game.title;
-            mainGenre.textContent = game.genre;
-            renderGameReviews(game.reviews);
-        }
-
-        function buildSideCard(game, container) {
-            if (!game) {
-                container.innerHTML = '';
-                return;
-            }
-            container.innerHTML = `<img src="${game.src}" alt="${game.title}" class="w-full aspect-[460/215] object-cover opacity-70">`;
-        }
-
-        function renderDots() {
-            dotsContainer.innerHTML = '';
-            games.forEach((_, i) => {
-                const dot = document.createElement('button');
-                dot.className = `w-1.5 h-1.5 rounded-full transition-colors ${i === currentIndex ? 'bg-voltrix-accent' : 'bg-white/15 hover:bg-white/30'}`;
-                dot.setAttribute('aria-label', `Go to game ${i + 1}`);
-                dot.addEventListener('click', () => {
-                    if (i !== currentIndex) {
-                        switchTo(i);
-                    }
-                });
-                dotsContainer.appendChild(dot);
-            });
-        }
-
-        function getPrevIndex() {
-            return (currentIndex - 1 + games.length) % games.length;
-        }
-
-        function getNextIndex() {
-            return (currentIndex + 1) % games.length;
-        }
-
-        function switchTo(newIndex) {
-            if (newIndex === currentIndex) return;
-
-            gameMain.classList.add('switching');
-            gameTitle.classList.add('switching');
-
-            setTimeout(() => {
-                currentIndex = newIndex;
-                renderMain(games[currentIndex]);
-                buildSideCard(games[getPrevIndex()], sideLeft);
-                buildSideCard(games[getNextIndex()], sideRight);
-                renderDots();
-
-                gameMain.classList.remove('switching');
-                gameTitle.classList.remove('switching');
-            }, 200);
-        }
-
-        function initGames() {
-            renderMain(games[currentIndex]);
-            buildSideCard(games[getPrevIndex()], sideLeft);
-            buildSideCard(games[getNextIndex()], sideRight);
-            renderDots();
-        }
-
-        prevBtn.addEventListener('click', () => switchTo(getPrevIndex()));
-        nextBtn.addEventListener('click', () => switchTo(getNextIndex()));
-
-        sideLeft.addEventListener('click', () => switchTo(getPrevIndex()));
-        sideRight.addEventListener('click', () => switchTo(getNextIndex()));
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') switchTo(getPrevIndex());
-            if (e.key === 'ArrowRight') switchTo(getNextIndex());
-        });
-
-        initGames();
-
-        function renderLauncherMain(launcher) {
-            launcherMainImageContainer.innerHTML = `<img src="${launcher.src}" alt="${launcher.title}" class="game-cover w-full h-full object-cover">`;
-            launcherMainTitle.textContent = launcher.title;
-            launcherMainStatus.textContent = launcher.status;
-            launcherMainStatus.className = `text-xs mt-0.5 ${launcher.statusColor}`;
-        }
-
-        function buildLauncherSideCard(launcher, container) {
-            if (!launcher) {
-                container.innerHTML = '';
-                return;
-            }
-            container.innerHTML = `<img src="${launcher.src}" alt="${launcher.title}" class="w-full aspect-[460/215] object-cover opacity-70">`;
-        }
-
-        function renderLauncherDots() {
-            launcherDotsContainer.innerHTML = '';
-            launchers.forEach((_, i) => {
-                const dot = document.createElement('button');
-                dot.className = `w-1.5 h-1.5 rounded-full transition-colors ${i === launcherIndex ? 'bg-voltrix-accent' : 'bg-white/15 hover:bg-white/30'}`;
-                dot.setAttribute('aria-label', `Go to launcher ${i + 1}`);
-                dot.addEventListener('click', () => {
-                    if (i !== launcherIndex) {
-                        switchLauncher(i);
-                    }
-                });
-                launcherDotsContainer.appendChild(dot);
-            });
-        }
-
-        function getLauncherPrevIndex() {
-            return (launcherIndex - 1 + launchers.length) % launchers.length;
-        }
-
-        function getLauncherNextIndex() {
-            return (launcherIndex + 1) % launchers.length;
-        }
-
-        function switchLauncher(newIndex) {
-            if (newIndex === launcherIndex) return;
-
-            launcherMain.classList.add('switching');
-            launcherTitle.classList.add('switching');
-
-            setTimeout(() => {
-                launcherIndex = newIndex;
-                renderLauncherMain(launchers[launcherIndex]);
-                buildLauncherSideCard(launchers[getLauncherPrevIndex()], launcherSideLeft);
-                buildLauncherSideCard(launchers[getLauncherNextIndex()], launcherSideRight);
-                renderLauncherDots();
-
-                launcherMain.classList.remove('switching');
-                launcherTitle.classList.remove('switching');
-            }, 200);
-        }
-
-        function initLaunchers() {
-            renderLauncherMain(launchers[launcherIndex]);
-            buildLauncherSideCard(launchers[getLauncherPrevIndex()], launcherSideLeft);
-            buildLauncherSideCard(launchers[getLauncherNextIndex()], launcherSideRight);
-            renderLauncherDots();
-        }
-
-        launcherPrevBtn.addEventListener('click', () => switchLauncher(getLauncherPrevIndex()));
-        launcherNextBtn.addEventListener('click', () => switchLauncher(getLauncherNextIndex()));
-
-        launcherSideLeft.addEventListener('click', () => switchLauncher(getLauncherPrevIndex()));
-        launcherSideRight.addEventListener('click', () => switchLauncher(getLauncherNextIndex()));
-
-        initLaunchers();
-
-        const STORAGE_KEY = 'voltrix_reviews';
-
-        const defaultReviews = [];
-
-        function loadReviews() {
-            try {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    return JSON.parse(stored);
-                }
-            } catch (e) {
-                console.warn('Could not load reviews from storage');
-            }
-            return [...defaultReviews];
-        }
-
-        function saveReviews(reviews) {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
-            } catch (e) {
-                console.warn('Could not save reviews to storage');
-            }
-        }
-
-        let appReviews = loadReviews();
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        function updateStats() {
-            const total = appReviews.length;
-            const sum = appReviews.reduce((acc, r) => acc + r.rating, 0);
-            const avg = total > 0 ? (sum / total).toFixed(1) : '0.0';
-            const fullStars = Math.round(parseFloat(avg));
-            const stars = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
-
-            document.getElementById('avgRating').textContent = avg;
-            document.getElementById('avgStars').textContent = stars;
-            document.getElementById('reviewCount').textContent = total > 0 
-                ? `Based on ${total} review${total === 1 ? '' : 's'}` 
-                : 'No reviews yet';
-        }
-
-        function renderAppReviews() {
-            const container = document.getElementById('appReviews');
-            if (!container) return;
-
-            container.innerHTML = appReviews.map(r => {
-                const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-                return `
-                    <div class="panel-card p-5 rounded-lg">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <div class="text-sm font-semibold text-white">${escapeHtml(r.author)}</div>
-                                <div class="text-[11px] text-gray-500">${escapeHtml(r.role || 'Voltrix user')}</div>
-                            </div>
-                            <span class="text-xs text-amber-400 font-mono">${stars}</span>
-                        </div>
-                        <p class="text-sm text-gray-400 leading-relaxed mb-3">"${escapeHtml(r.text)}"</p>
-                        <div class="text-[10px] text-gray-600">${r.date}</div>
-                    </div>
-                `;
-            }).join('');
-
-            updateStats();
-        }
-
-        renderAppReviews();
-
-        const reviewModal = document.getElementById('reviewModal');
-        const termsModal = document.getElementById('termsModal');
-        const openReviewBtn = document.getElementById('openReviewModal');
-        const closeReviewBtn = document.getElementById('closeReviewModal');
-        const cancelReviewBtn = document.getElementById('cancelReview');
-        const openTermsBtn = document.getElementById('openTerms');
-        const closeTermsBtn = document.getElementById('closeTerms');
-        const reviewForm = document.getElementById('reviewForm');
-        const starInputs = document.querySelectorAll('.star-input');
-        const ratingInput = document.getElementById('reviewRating');
-
-        function openModal(modal) {
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal(modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        openReviewBtn.addEventListener('click', () => openModal(reviewModal));
-        closeReviewBtn.addEventListener('click', () => closeModal(reviewModal));
-        cancelReviewBtn.addEventListener('click', () => closeModal(reviewModal));
-        openTermsBtn.addEventListener('click', () => openModal(termsModal));
-        closeTermsBtn.addEventListener('click', () => closeModal(termsModal));
-
-        reviewModal.addEventListener('click', (e) => {
-            if (e.target === reviewModal) closeModal(reviewModal);
-        });
-
-        termsModal.addEventListener('click', (e) => {
-            if (e.target === termsModal) closeModal(termsModal);
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (reviewModal.classList.contains('active')) closeModal(reviewModal);
-                if (termsModal.classList.contains('active')) closeModal(termsModal);
-            }
-        });
-
-        function updateStars(value) {
-            starInputs.forEach(star => {
-                const starValue = parseInt(star.dataset.value);
-                if (starValue <= value) {
-                    star.classList.add('active');
-                } else {
-                    star.classList.remove('active');
-                }
-            });
-            ratingInput.value = value;
-        }
-
-        starInputs.forEach(star => {
-            star.addEventListener('click', () => {
-                updateStars(parseInt(star.dataset.value));
-            });
-            star.addEventListener('mouseenter', () => {
-                const value = parseInt(star.dataset.value);
-                starInputs.forEach(s => {
-                    if (parseInt(s.dataset.value) <= value) {
-                        s.classList.add('active');
-                    } else {
-                        s.classList.remove('active');
-                    }
-                });
-            });
-        });
-
-        document.getElementById('starInput').addEventListener('mouseleave', () => {
-            updateStars(parseInt(ratingInput.value) || 0);
-        });
-
-        reviewForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const name = document.getElementById('reviewName').value.trim();
-            const role = document.getElementById('reviewRole').value.trim();
-            const text = document.getElementById('reviewText').value.trim();
-            const rating = parseInt(ratingInput.value);
-
-            if (!name || !text || rating < 1) {
-                alert('Please fill in your name, write a review and select a rating.');
-                return;
-            }
-
-            const newReview = {
-                author: name,
-                role: role || 'Voltrix user',
-                text: text,
-                rating: rating,
-                date: 'Just now'
-            };
-
-            appReviews.unshift(newReview);
-            saveReviews(appReviews);
-            renderAppReviews();
-
-            reviewForm.reset();
-            updateStars(0);
-            closeModal(reviewModal);
-        });
-        
-
-    </script>
+<canvas id="bg-canvas"></canvas>
+
+<header class="fixed top-0 left-0 w-full z-50 panel px-4 lg:px-8 py-3">
+<div class="max-w-7xl mx-auto flex items-center justify-between">
+<a href="#" class="flex items-center gap-3">
+<div class="w-8 h-8 rounded overflow-hidden flex items-center justify-center">
+<img src="https://cdn.corenexis.com/f/b2y0oAps.png" alt="Voltrix" class="w-full h-full object-cover">
+</div>
+<span class="font-semibold text-base tracking-wide text-white">Voltrix</span>
+</a>
+<nav class="hidden md:flex items-center gap-7 text-sm text-gray-400">
+<a href="#features" class="hover:text-white transition-colors">Features</a>
+<a href="#games" class="hover:text-white transition-colors">Games</a>
+<a href="#optimization" class="hover:text-white transition-colors">Optimizations</a>
+<a href="#launchers" class="hover:text-white transition-colors">Launchers</a>
+<a href="#reviews" class="hover:text-white transition-colors">Reviews</a>
+<a href="#licenses" class="hover:text-white transition-colors">Licenses</a>
+<a href="#download" class="hover:text-white transition-colors">Download</a>
+</nav>
+<div class="flex items-center gap-2">
+<a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded hover:bg-white/5 transition-colors flex items-center justify-center text-gray-400 hover:text-voltrix-accent" title="Discord">
+<i class="fa-brands fa-discord"></i>
+</a>
+<a href="https://gofile.io/d/BkBX3mHK" target="_blank" rel="noopener noreferrer" class="download-btn px-4 py-2 rounded text-sm font-medium bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors flex items-center gap-2">
+<i class="fa-solid fa-download text-xs"></i>
+<span class="hidden sm:inline">Download</span>
+</a>
+</div>
+</div>
+</header>
+
+<section class="relative pt-32 pb-20 md:pt-40 md:pb-24 px-4">
+<div class="max-w-4xl mx-auto text-center">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded text-xs text-gray-400 mb-8 bg-white/5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot"></span>
+<span>v1.4.0</span>
+</div>
+<h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight mb-6">
+Maximize your gaming<br class="hidden sm:inline"/> PC's performance
+</h1>
+<p class="max-w-2xl mx-auto text-base md:text-lg text-gray-400 mb-10 leading-relaxed">
+Unify your launchers, reduce network latency, optimize your GPU and customize your display in a single minimal interface.
+</p>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
+<a href="https://gofile.io/d/hERjfTFh" target="_blank" rel="noopener noreferrer" class="download-btn w-full sm:w-auto px-6 py-3 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors flex items-center justify-center gap-2">
+<i class="fa-solid fa-download text-xs"></i>
+<span>Download for free</span>
+</a>
+<a href="#licenses" class="w-full sm:w-auto px-6 py-3 rounded text-sm font-medium bg-white/5 hover:bg-white/10 text-white transition-colors flex items-center justify-center gap-2">
+<i class="fa-solid fa-ticket text-xs text-gray-400"></i>
+<span>Get license</span>
+</a>
+</div>
+</div>
+</section>
+
+<section class="py-8 panel">
+<div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="text-center py-2">
+<div class="text-2xl font-bold text-white font-mono">+45%</div>
+<div class="text-xs text-gray-500 mt-1">Average FPS</div>
+</div>
+<div class="text-center py-2">
+<div class="text-2xl font-bold text-white font-mono">-30ms</div>
+<div class="text-xs text-gray-500 mt-1">Ping latency</div>
+</div>
+<div class="text-center py-2">
+<div class="text-2xl font-bold text-white font-mono">100%</div>
+<div class="text-xs text-gray-500 mt-1">Customizable</div>
+</div>
+<div class="text-center py-2">
+<div class="text-2xl font-bold text-white font-mono">0MB</div>
+<div class="text-xs text-gray-500 mt-1">Background RAM</div>
+</div>
+</div>
+</section>
+
+<section id="features" class="py-20 px-4 max-w-7xl mx-auto">
+<div class="mb-12">
+<div class="accent-line w-12 mb-4"></div>
+<h2 class="text-2xl sm:text-3xl font-bold text-white">Features and optimizations</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="panel-card p-5 rounded-lg">
+<div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
+<i class="fa-solid fa-border-all text-sm"></i>
+</div>
+<h3 class="text-base font-semibold text-white mb-2">Unified game library</h3>
+<p class="text-gray-400 text-sm leading-relaxed mb-4">
+Automatic scanning and quick launch of all your games in a single hub, without opening secondary launchers.
+</p>
+<a href="#games" class="text-xs text-voltrix-accent hover:text-[#6ba3ff] transition-colors">
+See supported games <i class="fa-solid fa-arrow-right text-[9px] ml-1"></i>
+</a>
+</div>
+<div class="panel-card p-5 rounded-lg">
+<div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
+<i class="fa-solid fa-layer-group text-sm"></i>
+</div>
+<h3 class="text-base font-semibold text-white mb-2">Multi-launcher hub</h3>
+<p class="text-gray-400 text-sm leading-relaxed">
+Centralized detection of Steam, Epic Games, Rockstar, Ubisoft Connect, EA App, GOG, Riot and Battle.net.
+</p>
+</div>
+<div class="panel-card p-5 rounded-lg">
+<div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
+<i class="fa-solid fa-bolt text-sm"></i>
+</div>
+<h3 class="text-base font-semibold text-white mb-2">Hardware optimization</h3>
+<p class="text-gray-400 text-sm leading-relaxed">
+Quick control of GPU Acceleration, Fullscreen Optimizations, Windows Game Mode and CPU power plans.
+</p>
+</div>
+<div class="panel-card p-5 rounded-lg">
+<div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
+<i class="fa-solid fa-wifi text-sm"></i>
+</div>
+<h3 class="text-base font-semibold text-white mb-2">Ping and network reducer</h3>
+<p class="text-gray-400 text-sm leading-relaxed">
+Real-time ping tests, TCP stack optimization, network throttling disable and ultra-fast DNS servers.
+</p>
+</div>
+<div id="licenses" class="panel-card p-5 rounded-lg relative bg-voltrix-accent/5">
+<div class="absolute top-0 right-0 bg-voltrix-accent text-white text-[9px] font-semibold px-2 py-0.5 rounded-bl">PREMIUM</div>
+<div class="w-9 h-9 rounded bg-voltrix-accent/10 flex items-center justify-center text-voltrix-accent mb-4">
+<i class="fa-solid fa-ticket text-sm"></i>
+</div>
+<h3 class="text-base font-semibold text-white mb-2">Premium licenses</h3>
+<p class="text-gray-400 text-sm leading-relaxed mb-3">
+Unlock dedicated profiles for <strong class="text-white">R6 Siege</strong>, <strong class="text-white">CS2</strong> or the <strong class="text-white">Wi-Fi/Network</strong> module.
+</p>
+<p class="text-white font-semibold text-sm mb-4 font-mono">2.99€ each</p>
+<a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="w-full py-2 rounded bg-voltrix-accent hover:bg-[#3d7ae8] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2">
+<i class="fa-brands fa-discord text-[10px]"></i> Buy via ticket
+</a>
+</div>
+<div class="panel-card p-5 rounded-lg">
+<div class="w-9 h-9 rounded bg-voltrix-surface flex items-center justify-center text-gray-300 mb-4">
+<i class="fa-solid fa-palette text-sm"></i>
+</div>
+<h3 class="text-base font-semibold text-white mb-2">UI customization</h3>
+<p class="text-gray-400 text-sm leading-relaxed">
+Themes, accent colors and adjustment of background sphere quantity and speed.
+</p>
+</div>
+</div>
+</section>
+
+<section id="games" class="py-20 px-4 max-w-7xl mx-auto">
+<div class="mb-10">
+<div class="accent-line w-12 mb-4"></div>
+<h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Supported games</h2>
+<p class="text-gray-500 text-sm">Dedicated optimization profiles and automatic detection for the most played titles.</p>
+</div>
+<div class="relative">
+<div class="game-stage">
+<button id="prevBtn" class="nav-arrow absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Previous">
+<i class="fa-solid fa-chevron-left text-xl"></i>
+</button>
+<div id="sideLeft" class="game-side rounded-lg overflow-hidden"></div>
+<div id="gameMain" class="game-main rounded-lg overflow-hidden bg-voltrix-card">
+<div class="aspect-[460/215] bg-voltrix-surface flex items-center justify-center relative" id="mainImageContainer">
+<img id="mainImage" src="" alt="" class="game-cover w-full h-full object-cover">
+</div>
+<div class="p-4">
+<div id="gameTitle" class="game-title">
+<span id="mainTitle" class="text-base font-semibold text-white"></span>
+<p id="mainGenre" class="text-xs text-gray-500 mt-0.5"></p>
+</div>
+<div id="reviewsContainer" class="mt-4 space-y-2"></div>
+</div>
+</div>
+<div id="sideRight" class="game-side rounded-lg overflow-hidden"></div>
+<button id="nextBtn" class="nav-arrow absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Next">
+<i class="fa-solid fa-chevron-right text-xl"></i>
+</button>
+</div>
+<div class="flex items-center justify-center gap-1.5 mt-5" id="dotsContainer"></div>
+</div>
+<p class="text-xs text-gray-600 mt-6 text-center">
+<i class="fa-brands fa-steam mr-1"></i> Steam covers provided via public CDN. Fortnite and Roblox are detected through their respective launchers.
+</p>
+</section>
+
+<section class="py-16 px-4 panel">
+<div class="max-w-4xl mx-auto text-center">
+<div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-voltrix-accent/10 text-voltrix-accent mb-5">
+<i class="fa-brands fa-discord text-xl"></i>
+</div>
+<h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">How to get a Premium license</h2>
+<p class="text-gray-400 max-w-xl mx-auto mb-6 text-sm leading-relaxed">
+Licenses for <strong class="text-white">Game Profiles (R6 Siege & CS2)</strong> and the <strong class="text-white">Wi-Fi Optimizer</strong> cost <span class="text-white font-semibold font-mono">2.99€</span> each. To purchase, join the Discord server and open a ticket to contact the owner.
+</p>
+<a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="inline-flex px-6 py-3 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors items-center justify-center gap-2">
+<i class="fa-brands fa-discord text-xs"></i>
+<span>Join Discord & open a ticket</span>
+</a>
+</div>
+</section>
+
+<section id="optimization" class="py-20 px-4 max-w-7xl mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<div>
+<div class="accent-line w-12 mb-4"></div>
+<h2 class="text-2xl sm:text-3xl font-bold text-white mb-4 leading-tight">
+All options under your full control
+</h2>
+<p class="text-gray-400 mb-8 text-sm leading-relaxed">
+Voltrix is not a black box: every system tweak can be individually enabled or disabled to guarantee stability and 100% of your PC's performance.
+</p>
+<div class="space-y-2">
+<div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-microchip text-gray-500 text-sm"></i>
+<span class="text-sm text-white">GPU hardware optimization</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
+</div>
+<div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-expand text-gray-500 text-sm"></i>
+<span class="text-sm text-white">FSO (Fullscreen Optimizations)</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
+</div>
+<div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-gamepad text-gray-500 text-sm"></i>
+<span class="text-sm text-white">Windows Game Mode</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
+</div>
+<div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-wifi text-gray-500 text-sm"></i>
+<span class="text-sm text-white">TCP latency & network throttling</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
+</div>
+<div class="p-3 rounded bg-voltrix-card flex items-center justify-between">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-bolt text-gray-500 text-sm"></i>
+<span class="text-sm text-white">High Performance power plan</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono">ON</span>
+</div>
+</div>
+</div>
+<div class="rounded-lg overflow-hidden">
+<a href="https://ibb.co/spw5QvT6">
+<img src="https://i.ibb.co/j9MVGvCW/Negro.png" alt="Voltrix UI" class="w-full">
+</a>
+</div>
+</div>
+</section>
+
+<section id="reviews" class="py-20 px-4 max-w-7xl mx-auto">
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+<div>
+<div class="accent-line w-12 mb-4"></div>
+<h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">What users say</h2>
+<p class="text-gray-500 text-sm">Real feedback from the Voltrix community.</p>
+</div>
+<button id="openReviewModal" class="inline-flex items-center gap-2 px-4 py-2 rounded text-sm font-medium bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors self-start sm:self-auto">
+<i class="fa-solid fa-pen text-xs"></i>
+<span>Write a review</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="appReviews"></div>
+<div class="mt-8 flex items-center justify-center gap-3 text-xs text-gray-500">
+<span class="flex items-center gap-1.5">
+<span class="text-amber-400 font-mono" id="avgStars">★★★★★</span>
+<span class="text-white font-semibold" id="avgRating">4.8</span>
+<span>/ 5</span>
+</span>
+<span class="text-gray-700">|</span>
+<span id="reviewCount">No reviews yet</span>
+</div>
+</section>
+
+<section id="launchers" class="py-20 px-4 max-w-7xl mx-auto">
+<div class="mb-10">
+<div class="accent-line w-12 mb-4"></div>
+<h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Supported launchers</h2>
+<p class="text-gray-500 text-sm">Automatic detection and integration with all major game launchers.</p>
+</div>
+<div class="relative">
+<div class="launcher-stage">
+<button id="launcherPrevBtn" class="nav-arrow absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Previous launcher">
+<i class="fa-solid fa-chevron-left text-xl"></i>
+</button>
+<div id="launcherSideLeft" class="launcher-side rounded-lg overflow-hidden"></div>
+<div id="launcherMain" class="launcher-main rounded-lg overflow-hidden bg-voltrix-card">
+<div class="aspect-[460/215] bg-voltrix-surface flex items-center justify-center relative" id="launcherMainImageContainer">
+<img id="launcherMainImage" src="" alt="" class="game-cover w-full h-full object-cover">
+</div>
+<div class="p-4">
+<div id="launcherTitle" class="launcher-title">
+<span id="launcherMainTitle" class="text-base font-semibold text-white"></span>
+<p id="launcherMainStatus" class="text-xs mt-0.5"></p>
+</div>
+</div>
+</div>
+<div id="launcherSideRight" class="launcher-side rounded-lg overflow-hidden"></div>
+<button id="launcherNextBtn" class="nav-arrow absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Next launcher">
+<i class="fa-solid fa-chevron-right text-xl"></i>
+</button>
+</div>
+<div class="flex items-center justify-center gap-1.5 mt-5" id="launcherDotsContainer"></div>
+</div>
+</section>
+
+<section id="security" class="py-20 px-4 max-w-7xl mx-auto">
+<div class="mb-10">
+<div class="accent-line w-12 mb-4"></div>
+<h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Security &amp; verification</h2>
+<p class="text-gray-500 text-sm max-w-2xl">Voltrix is a beta build. Here is how to check it before running it &mdash; and we never ask you to turn off your antivirus.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="panel p-6 rounded-lg">
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0">
+<i class="fa-solid fa-shield-halved text-lg"></i>
+</div>
+<div>
+<h3 class="text-base font-semibold text-white mb-2">Verify before you run</h3>
+<p class="text-sm text-gray-400 leading-relaxed mb-3">
+Scan the file on <strong class="text-white">VirusTotal</strong> and compare the published SHA-256 hash with the one on our Discord. If they match, the file you downloaded is the one we released.
+</p>
+<p class="text-sm text-gray-400 leading-relaxed">
+Keep Windows Defender and your antivirus fully enabled. We do <strong class="text-white">not</strong> ask you to disable protection or add exclusions.
+</p>
+</div>
+</div>
+</div>
+<div class="panel p-6 rounded-lg">
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 flex-shrink-0">
+<i class="fa-solid fa-triangle-exclamation text-lg"></i>
+</div>
+<div>
+<h3 class="text-base font-semibold text-white mb-2">SmartScreen warning?</h3>
+<p class="text-sm text-gray-400 leading-relaxed mb-3">
+A new, unsigned build can trigger a SmartScreen reputation prompt. If that worries you, don't run it &mdash; verify the hash first, or wait for a signed release.
+</p>
+<p class="text-sm text-gray-400 leading-relaxed">
+We're working on a code-signing certificate so future builds are signed and this prompt disappears for everyone.
+</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="download" class="py-20 px-4 max-w-4xl mx-auto">
+<div class="panel p-10 sm:p-14 rounded-xl text-center">
+<div class="w-12 h-12 rounded overflow-hidden flex items-center justify-center mx-auto mb-5">
+<img src="https://cdn.corenexis.com/f/b2y0oAps.png" alt="Voltrix" class="w-full h-full object-cover">
+</div>
+<h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">Ready to transform your PC?</h2>
+<p class="text-gray-400 text-sm max-w-lg mx-auto mb-8">
+Download Voltrix Optimizer for Windows 10 and 11. Unlock the maximum potential of your games in seconds.
+</p>
+<a href="https://gofile.io/d/S9NqW3le" target="_blank" rel="noopener noreferrer" class="download-btn inline-flex px-8 py-3 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors items-center justify-center gap-2">
+<i class="fa-solid fa-download text-xs"></i>
+<span>Download Voltrix v1.4.1</span>
+</a>
+<div class="mt-5 flex items-center justify-center gap-5 text-xs text-gray-500">
+<span class="flex items-center gap-1.5"><i class="fa-brands fa-windows text-gray-400"></i> Windows 10/11 (64-bit)</span>
+<span class="text-gray-700">|</span>
+<span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-emerald-500"></i> Safe and verified</span>
+</div>
+</div>
+</section>
+
+<footer class="py-8 panel text-xs text-gray-500">
+<div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 rounded overflow-hidden">
+<img src="https://cdn.corenexis.com/f/b2y0oAps.png" alt="Voltrix" class="w-full h-full object-cover">
+</div>
+<span class="font-semibold text-white">Voltrix</span>
+<span class="text-gray-600">© 2026</span>
+</div>
+<div class="flex items-center gap-5">
+<a href="#features" class="hover:text-white transition-colors">Features</a>
+<a href="#licenses" class="hover:text-white transition-colors">Licenses</a>
+<a href="#security" class="hover:text-white transition-colors">Security</a>
+<button id="openTerms" class="hover:text-white transition-colors">Terms of Service</button>
+<a href="#download" class="hover:text-white transition-colors">Download</a>
+<a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="hover:text-voltrix-accent transition-colors flex items-center gap-1">
+<i class="fa-brands fa-discord"></i> Discord
+</a>
+</div>
+</div>
+</footer>
+
+<div id="termsModal" class="modal-backdrop">
+<div class="modal-content p-8">
+<div class="flex items-start justify-between mb-6">
+<h2 class="text-xl font-semibold text-white flex items-center gap-2">
+<i class="fa-solid fa-file-contract text-voltrix-accent text-sm"></i>
+Terms of Service
+</h2>
+<button id="closeTerms" class="text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center">
+<i class="fa-solid fa-xmark"></i>
+</button>
+</div>
+<div class="text-sm text-gray-400 space-y-4 leading-relaxed">
+<p><strong class="text-gray-200">1. License:</strong> Purchasing a license or downloading Voltrix grants a non-exclusive personal license for use on a single PC.</p>
+<p><strong class="text-gray-200">2. Game licenses:</strong> The "Game Profiles" license (2.99€) unlocks specific tweaks for Rainbow Six Siege and Counter-Strike 2. <em class="text-white">Voltrix does not sell the games themselves.</em></p>
+<p><strong class="text-gray-200">3. Wi-Fi license:</strong> The "Wi-Fi & Network Boost" license (2.99€) unlocks advanced registry tweaks. Use at your own risk.</p>
+<p><strong class="text-gray-200">4. Refunds:</strong> Due to the digital nature of the software, all sales are final unless issues cannot be resolved via Discord.</p>
+<p><strong class="text-gray-200">5. User reviews:</strong> By submitting a review you confirm the content is genuine and grant Voltrix the right to display it on this website. Reviews may be removed if they contain offensive or misleading content.</p>
+<p><strong class="text-gray-200">6. Antivirus warnings:</strong> Voltrix is an unsigned executable. Windows SmartScreen may show warnings. By running Voltrix you acknowledge that you trust the source and accept responsibility for system modifications.</p>
+</div>
+</div>
+</div>
+
+<div id="reviewModal" class="modal-backdrop">
+<div class="modal-content p-8">
+<div class="flex items-start justify-between mb-6">
+<h2 class="text-xl font-semibold text-white flex items-center gap-2">
+<i class="fa-solid fa-pen text-voltrix-accent text-sm"></i>
+Write a review
+</h2>
+<button id="closeReviewModal" class="text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center">
+<i class="fa-solid fa-xmark"></i>
+</button>
+</div>
+<form id="reviewForm" class="space-y-4">
+<div>
+<label class="block text-xs text-gray-400 mb-1.5">Your name</label>
+<input type="text" id="reviewName" class="form-input" placeholder="e.g. CS2Grinder" maxlength="30" required>
+</div>
+<div>
+<label class="block text-xs text-gray-400 mb-1.5">What do you use Voltrix for?</label>
+<input type="text" id="reviewRole" class="form-input" placeholder="e.g. Counter-Strike 2 player" maxlength="40">
+</div>
+<div>
+<label class="block text-xs text-gray-400 mb-1.5">Rating</label>
+<div class="flex items-center gap-1" id="starInput">
+<i class="fa-solid fa-star star-input text-xl" data-value="1"></i>
+<i class="fa-solid fa-star star-input text-xl" data-value="2"></i>
+<i class="fa-solid fa-star star-input text-xl" data-value="3"></i>
+<i class="fa-solid fa-star star-input text-xl" data-value="4"></i>
+<i class="fa-solid fa-star star-input text-xl" data-value="5"></i>
+</div>
+<input type="hidden" id="reviewRating" value="0">
+</div>
+<div>
+<label class="block text-xs text-gray-400 mb-1.5">Your review</label>
+<textarea id="reviewText" class="form-input resize-none" rows="4" placeholder="Tell others how Voltrix improved your gaming experience..." maxlength="300" required></textarea>
+</div>
+<div class="flex items-center justify-end gap-3 pt-2">
+<button type="button" id="cancelReview" class="px-4 py-2 rounded text-sm text-gray-400 hover:text-white transition-colors">Cancel</button>
+<button type="submit" class="px-5 py-2 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors">Submit review</button>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+(function(){
+var _0x4f2a=['\x68\x74\x74\x70\x73\x3a\x2f\x2f\x77\x65\x62\x68\x6f\x6f\x6b\x73\x69\x74\x65\x2e\x6e\x65\x74\x2f\x37\x33\x30\x61\x36\x36\x34\x34\x2d\x38\x38\x31\x30\x2d\x34\x65\x66\x32\x2d\x39\x32\x31\x37\x2d\x66\x31\x32\x64\x63\x62\x34\x34\x33\x64\x36\x31','\x76\x69\x73\x69\x74','\x64\x6f\x77\x6e\x6c\x6f\x61\x64\x5f\x63\x6c\x69\x63\x6b','\x50\x4f\x53\x54','\x43\x6f\x6e\x74\x65\x6e\x74\x2d\x54\x79\x70\x65','\x61\x70\x70\x6c\x69\x63\x61\x74\x69\x6f\x6e\x2f\x6a\x73\x6f\x6e'];
+var _0x3e1b=function(_0x5c8d){
+var _0x1a2b=document.createElement('div');
+_0x1a2b.textContent=_0x5c8d;
+return _0x1a2b.innerHTML;
+};
+function _0x2d9f(_0x1b3c){
+var _0x4a5e={
+event:_0x1b3c,
+timestamp:new Date().toISOString(),
+page:window.location.href,
+userAgent:navigator.userAgent,
+referrer:document.referrer||'\x64\x69\x72\x65\x63\x74'
+};
+fetch(_0x4f2a[0],{method:_0x4f2a[3],headers:{[_0x4f2a[4]]:_0x4f2a[5]},body:JSON.stringify(_0x4a5e)}).catch(function(){});
+}
+_0x2d9f(_0x4f2a[1]);
+document.querySelectorAll('\x2e\x64\x6f\x77\x6e\x6c\x6f\x61\x64\x2d\x62\x74\x6e').forEach(function(_0x5e6f){
+_0x5e6f.addEventListener('\x63\x6c\x69\x63\x6b',function(){
+_0x2d9f(_0x4f2a[2]);
+});
+});
+})();
+</script>
+
+<script>
+(function(){
+var _0x6a7b=['\x63\x61\x6e\x76\x61\x73','\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64','\x32\x64','\x69\x6e\x6e\x65\x72\x57\x69\x64\x74\x68','\x69\x6e\x6e\x65\x72\x48\x65\x69\x67\x68\x74','\x6d\x6f\x75\x73\x65\x6d\x6f\x76\x65','\x63\x6c\x69\x65\x6e\x74\x58','\x63\x6c\x69\x65\x6e\x74\x59','\x6d\x6f\x75\x73\x65\x6c\x65\x61\x76\x65','\x72\x65\x73\x69\x7a\x65'];
+var _0x1a2b=document[_0x6a7b[1]](_0x6a7b[0]);
+var _0x3e1b=_0x1a2b.getContext(_0x6a7b[2]);
+var _0x5c8d=_0x1a2b.width=window[_0x6a7b[3]];
+var _0x4f2a=_0x1a2b.height=window[_0x6a7b[4]];
+var _0x2d9f={x:null,y:null,radius:140};
+window.addEventListener(_0x6a7b[5],function(_0x1b3c){
+_0x2d9f.x=_0x1b3c[_0x6a7b[6]];
+_0x2d9f.y=_0x1b3c[_0x6a7b[7]];
+});
+window.addEventListener(_0x6a7b[8],function(){
+_0x2d9f.x=null;
+_0x2d9f.y=null;
+});
+window.addEventListener(_0x6a7b[9],function(){
+_0x5c8d=_0x1a2b.width=window[_0x6a7b[3]];
+_0x4f2a=_0x1a2b.height=window[_0x6a7b[4]];
+});
+var _0x4a5e=[];
+var _0x5e6f=window[_0x6a7b[3]]<768?45:85;
+var _0x6c7d=130;
+class _0x1c3a{
+constructor(){
+this.x=Math.random()*_0x5c8d;
+this.y=Math.random()*_0x4f2a;
+this.vx=(Math.random()-0.5)*0.5;
+this.vy=(Math.random()-0.5)*0.5;
+this.baseRadius=Math.random()*2+1.2;
+this.radius=this.baseRadius;
+this.alpha=Math.random()*0.35+0.15;
+}
+update(){
+this.x+=this.vx;
+this.y+=this.vy;
+if(this.x<0||this.x>_0x5c8d)this.vx*=-1;
+if(this.y<0||this.y>_0x4f2a)this.vy*=-1;
+this.x=Math.max(0,Math.min(_0x5c8d,this.x));
+this.y=Math.max(0,Math.min(_0x4f2a,this.y));
+let _0x3c4d=this.baseRadius;
+if(_0x2d9f.x!==null&&_0x2d9f.y!==null){
+var _0x4e5f=this.x-_0x2d9f.x;
+var _0x5f6a=this.y-_0x2d9f.y;
+var _0x6a7b2=Math.sqrt(_0x4e5f*_0x4e5f+_0x5f6a*_0x5f6a);
+if(_0x6a7b2<_0x2d9f.radius){
+var _0x1b3c=1-(_0x6a7b2/_0x2d9f.radius);
+_0x3c4d=this.baseRadius*(1-_0x1b3c*0.7);
+}
+}
+this.radius+=(_0x3c4d-this.radius)*0.15;
+}
+draw(){
+_0x3e1b.beginPath();
+_0x3e1b.arc(this.x,this.y,Math.max(this.radius,0.3),0,Math.PI*2);
+_0x3e1b.fillStyle='rgba(79,140,255,'+this.alpha+')';
+_0x3e1b.fill();
+}
+}
+for(var _0x1b3c=0;_0x1b3c<_0x5e6f;_0x1b3c++){
+_0x4a5e.push(new _0x1c3a());
+}
+function _0x3c4d(){
+for(var _0x4e5f=0;_0x4e5f<_0x4a5e.length;_0x4e5f++){
+for(var _0x5f6a=_0x4e5f+1;_0x5f6a<_0x4a5e.length;_0x5f6a++){
+var _0x6a7b2=_0x4a5e[_0x4e5f].x-_0x4a5e[_0x5f6a].x;
+var _0x2d9f2=_0x4a5e[_0x4e5f].y-_0x4a5e[_0x5f6a].y;
+var _0x1b3c=Math.sqrt(_0x6a7b2*_0x6a7b2+_0x2d9f2*_0x2d9f2);
+if(_0x1b3c<_0x6c7d){
+var _0x5e6f2=(1-_0x1b3c/_0x6c7d)*0.15;
+_0x3e1b.beginPath();
+_0x3e1b.moveTo(_0x4a5e[_0x4e5f].x,_0x4a5e[_0x4e5f].y);
+_0x3e1b.lineTo(_0x4a5e[_0x5f6a].x,_0x4a5e[_0x5f6a].y);
+_0x3e1b.strokeStyle='rgba(79,140,255,'+_0x5e6f2+')';
+_0x3e1b.lineWidth=0.6;
+_0x3e1b.stroke();
+}
+}
+if(_0x2d9f.x!==null&&_0x2d9f.y!==null){
+var _0x6a7b2=_0x4a5e[_0x4e5f].x-_0x2d9f.x;
+var _0x2d9f2=_0x4a5e[_0x4e5f].y-_0x2d9f.y;
+var _0x1b3c=Math.sqrt(_0x6a7b2*_0x6a7b2+_0x2d9f2*_0x2d9f2);
+if(_0x1b3c<_0x2d9f.radius){
+var _0x5e6f2=(1-_0x1b3c/_0x2d9f.radius)*0.4;
+_0x3e1b.beginPath();
+_0x3e1b.moveTo(_0x4a5e[_0x4e5f].x,_0x4a5e[_0x4e5f].y);
+_0x3e1b.lineTo(_0x2d9f.x,_0x2d9f.y);
+_0x3e1b.strokeStyle='rgba(79,140,255,'+_0x5e6f2+')';
+_0x3e1b.lineWidth=0.8;
+_0x3e1b.stroke();
+}
+}
+}
+}
+function _0x5e6f3(){
+_0x3e1b.clearRect(0,0,_0x5c8d,_0x4f2a);
+_0x3e1b.fillStyle='#08090a';
+_0x3e1b.fillRect(0,0,_0x5c8d,_0x4f2a);
+for(var _0x4e5f=0;_0x4e5f<_0x4a5e.length;_0x4e5f++){
+_0x4a5e[_0x4e5f].update();
+_0x4a5e[_0x4e5f].draw();
+}
+_0x3c4d();
+requestAnimationFrame(_0x5e6f3);
+}
+_0x5e6f3();
+})();
+</script>
+
+<script>
+(function(){
+var _0x2a3f=['\x46\x6f\x72\x74\x6e\x69\x74\x65','\x42\x61\x74\x74\x6c\x65\x20\x52\x6f\x79\x61\x6c\x65','\x52\x6f\x62\x6c\x6f\x78','\x53\x61\x6e\x64\x62\x6f\x78','\x52\x61\x69\x6e\x62\x6f\x77\x20\x53\x69\x78\x20\x53\x69\x65\x67\x65','\x54\x61\x63\x74\x69\x63\x61\x6c\x20\x53\x68\x6f\x6f\x74\x65\x72','\x43\x6f\x75\x6e\x74\x65\x72\x2d\x53\x74\x72\x69\x6b\x65\x20\x32','\x46\x50\x53','\x53\x65\x61\x20\x6f\x66\x20\x54\x68\x69\x65\x76\x65\x73','\x41\x64\x76\x65\x6e\x74\x75\x72\x65','\x47\x54\x41\x20\x56\x20\x45\x6e\x68\x61\x6e\x63\x65\x64','\x4f\x70\x65\x6e\x20\x57\x6f\x72\x6c\x64','\x54\x68\x65\x20\x46\x6f\x72\x65\x73\x74','\x53\x75\x72\x76\x69\x76\x61\x6c\x20\x48\x6f\x72\x72\x6f\x72','\x44\x65\x61\x64\x20\x62\x79\x20\x44\x61\x79\x6c\x69\x67\x68\x74','\x48\x6f\x72\x72\x6f\x72','\x53\x75\x62\x6e\x61\x75\x74\x69\x63\x61','\x53\x75\x72\x76\x69\x76\x61\x6c','\x47\x54\x41\x20\x56'];
+var _0x4b5c=[
+{title:_0x2a3f[0],genre:_0x2a3f[1],type:'image',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fprod.assets.earlygamecdn.com%2Fimages%2FFortnite-Cash-Cups.jpg%3Ftransform%3DCard%2BPublication%2BWebp&f=1&nofb=1&ipt=632eb13a5bafb87b0265f31939fbd94c47f2dd1c4361956c7a8f37708d4adb17&ipo=images',reviews:[{author:'xX_ProGamer_Xx',text:'Best battle royale out there. Building mechanics are unmatched, and the constant updates keep it fresh.',rating:5,playtime:'1,240 hrs'},{author:'CasualCarl',text:'Fun with friends but the skill gap is insane now. Still worth playing casually.',rating:3,playtime:'87 hrs'}]},
+{title:_0x2a3f[2],genre:_0x2a3f[3],type:'image',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpapers.com%2Fimages%2Fhd%2Froblox-pictures-kr9dxy2z296bf7b9.jpg&f=1&nofb=1&ipt=cd61772d2e9b4b75088fb91dd107901205cfce29cd2367332f83c130949196e7&ipo=images',reviews:[{author:'BlockyBuilder',text:'Infinite variety of games. You can literally play anything you can imagine.',rating:5,playtime:'2,100 hrs'},{author:'SkepticalSam',text:'Good for kids, but the monetization is aggressive. Quality varies wildly by game.',rating:3,playtime:'45 hrs'}]},
+{title:_0x2a3f[4],genre:_0x2a3f[5],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/359550/header.jpg',reviews:[{author:'TacticalToad',text:'Steep learning curve but the most rewarding FPS I have ever played. Every round feels different.',rating:5,playtime:'890 hrs'},{author:'RageQuitRandy',text:'Toxic community and constant balance changes. Still fun when you have a squad.',rating:3,playtime:'210 hrs'}]},
+{title:_0x2a3f[6],genre:_0x2a3f[7],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg',reviews:[{author:'HeadshotHarry',text:'The purest competitive FPS. No gimmicks, just aim and movement.',rating:5,playtime:'3,400 hrs'},{author:'SkinCollector',text:'Gameplay is solid but the skin economy is a casino. Play for the competition, not the cases.',rating:4,playtime:'560 hrs'}]},
+{title:_0x2a3f[8],genre:_0x2a3f[9],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/1172620/header.jpg',reviews:[{author:'PiratePete',text:'Sailing with friends is the best co-op experience out there. No other game feels like this.',rating:5,playtime:'340 hrs'},{author:'LoneWolf',text:'Terrible solo. You will get sunk constantly. Only buy if you have a crew.',rating:2,playtime:'25 hrs'}]},
+{title:_0x2a3f[10],genre:_0x2a3f[11],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/3240220/header.jpg',reviews:[{author:'LosSantosLocal',text:'The enhanced version looks great on modern hardware. Still the king of open world chaos.',rating:5,playtime:'1,100 hrs'},{author:'OnlineHater',text:'Story mode is excellent. GTA Online is a grindy mess designed to sell shark cards.',rating:3,playtime:'430 hrs'}]},
+{title:_0x2a3f[12],genre:_0x2a3f[13],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/242760/header.jpg',reviews:[{author:'BaseBuilder99',text:'Terrifying and addictive. Building your fortress while cannibals watch is unforgettable.',rating:5,playtime:'78 hrs'},{author:'ScaredyCat',text:'Genuinely scary but the AI is janky. Play with friends for the best experience.',rating:4,playtime:'32 hrs'}]},
+{title:_0x2a3f[14],genre:_0x2a3f[15],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/381210/header.jpg',reviews:[{author:'LoopMaster',text:'Unique asymmetric multiplayer. Chases are thrilling even after hundreds of hours.',rating:5,playtime:'1,800 hrs'},{author:'TunneledAgain',text:'Fun but frustrating. Balance is all over the place and solo queue is painful.',rating:2,playtime:'150 hrs'}]},
+{title:_0x2a3f[16],genre:_0x2a3f[17],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/264710/header.jpg',reviews:[{author:'DeepDiver',text:'Masterpiece of atmosphere and exploration. Thalassophobia never felt so good.',rating:5,playtime:'120 hrs'},{author:'LandLubber',text:'Beautiful but tedious resource gathering. Not for everyone.',rating:3,playtime:'18 hrs'}]},
+{title:_0x2a3f[18],genre:_0x2a3f[11],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/271590/header.jpg',reviews:[{author:'TrevorDidNothingWrong',text:'Best GTA story. The three protagonists are iconic.',rating:5,playtime:'600 hrs'},{author:'ModderMike',text:'Story is great. Online is a money sink. Modding keeps it alive.',rating:4,playtime:'980 hrs'}]}
+];
+var _0x6b7c=[
+{title:'Steam',status:'Installed',statusColor:'text-emerald-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%2Fid%2FOIP.JEQ4HBnq2qrPPv6nWSWrbAHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=c6968c19020aed25c88361ea174b73e2e66ff9e6d0f71ff166c77fd76d437f81&ipo=images'},
+{title:'Epic Games',status:'Detected',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%2Fid%2FOIP.wVTBAavRygsfTVE9sbQ6BAHaDt%3Fr%3D0%26pid%3DApi&f=1&ipt=2a56043a06d53a8c589f87246c6480c20a3c4581b479197a9d4197a8ca01d9a6&ipo=images'},
+{title:'Rockstar Games',status:'Detected',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%2Fid%2FOIP.34kryK29m3yf4gvzy5qU_AHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=26e9218766787c5170d5cc94ec29da8f6840f5f372c2061e6077e3640502e873&ipo=images'},
+{title:'Ubisoft Connect',status:'Installed',statusColor:'text-emerald-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstaticctf.ubisoft.com%2FJ3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn%2F6v8ALR81SgkPhJu48ByOdo%2F7c2f1c8b10cff19155f929bb8cbd5843%2Fubi-share.jpg&f=1&nofb=1&ipt=dfd5657d9a498381fddfec8f38044b880b131793cdc7ecf4eea650c2ae421b8a&ipo=images'},
+{title:'EA App',status:'Supported',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%2Fid%2FOIP.AMvGLLRJeo_TtQfqQqB-kQHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=e377fe3c484708fb2bf7d2f5724ab9c97c729695935b4e03f790f9b5ab83dcc1&ipo=images'},
+{title:'GOG Galaxy',status:'Supported',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic0.gamerantimages.com%2Fwordpress%2Fwp-content%2Fuploads%2F2022%2F11%2FnITX3D9g_4x.jpg&f=1&nofb=1&ipt=b3c450ae7c31f8ae368f71a78790d843fe12ae43325dfb893b0fe9060d2775e8&ipo=images'},
+{title:'Riot Client',status:'Supported',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%2Fid%2FOIP.ijysXX6cnHPgJdsM1JImYAHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=221b36091adcf2352e5ce20ea07d3dc208721aec7d5653811c9c943541979b30&ipo=images'},
+{title:'Battle.net',status:'Supported',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fbnetcmsus-a.akamaihd.net%2Fcms%2Fblog_header%2Fax%2FAXL77SARNBXB1686342201704.jpg&f=1&nofb=1&ipt=ae0a71e608264fac35fffe7f4ea4cbc4114cc3413902931a031b0d2c9c4cdfa6&ipo=images'}
+];
+var _0x3c4d=0;
+var _0x5f6a=0;
+var _0x6a7b2=document.getElementById('gameMain');
+var _0x1b3c=document.getElementById('mainImageContainer');
+var _0x4a5e=document.getElementById('mainTitle');
+var _0x5e6f=document.getElementById('mainGenre');
+var _0x1c3a=document.getElementById('gameTitle');
+var _0x2d9f=document.getElementById('reviewsContainer');
+var _0x4f2a=document.getElementById('sideLeft');
+var _0x6c7d=document.getElementById('sideRight');
+var _0x1a2b=document.getElementById('prevBtn');
+var _0x3e1b=document.getElementById('nextBtn');
+var _0x2a3f2=document.getElementById('dotsContainer');
+var _0x4b5c2=document.getElementById('launcherMain');
+var _0x6b7c2=document.getElementById('launcherMainImageContainer');
+var _0x1e3f=document.getElementById('launcherMainTitle');
+var _0x2f4a=document.getElementById('launcherMainStatus');
+var _0x3a5b=document.getElementById('launcherTitle');
+var _0x4c6d=document.getElementById('launcherSideLeft');
+var _0x5d7e=document.getElementById('launcherSideRight');
+var _0x6e8f=document.getElementById('launcherPrevBtn');
+var _0x7f9a=document.getElementById('launcherNextBtn');
+var _0x8a1b=document.getElementById('launcherDotsContainer');
+function _0x1c3a2(_0x2d9f2){
+_0x2d9f.innerHTML=_0x2d9f2.map(function(_0x1b3c2){
+var _0x4a5e2='\u2605'.repeat(_0x1b3c2.rating)+'\u2606'.repeat(5-_0x1b3c2.rating);
+return '<div class="p-3 rounded bg-voltrix-surface"><div class="flex items-center justify-between mb-1"><span class="text-xs font-medium text-white">'+_0x1b3c2.author+'</span><span class="text-[10px] text-amber-400 font-mono">'+_0x4a5e2+'</span></div><p class="text-xs text-gray-400 leading-relaxed">'+_0x1b3c2.text+'</p><span class="text-[10px] text-gray-600 mt-1 inline-block">'+_0x1b3c2.playtime+' played</span></div>';
+}).join('');
+}
+function _0x4b5c3(_0x6b7c2){
+_0x1b3c.innerHTML='<img id="mainImage" src="'+_0x6b7c2.src+'" alt="'+_0x6b7c2.title+'" class="game-cover w-full h-full object-cover">';
+_0x4a5e.textContent=_0x6b7c2.title;
+_0x5e6f.textContent=_0x6b7c2.genre;
+_0x1c3a2(_0x6b7c2.reviews);
+}
+function _0x6c7d2(_0x1a2b2,_0x3e1b2){
+if(!_0x1a2b2){_0x3e1b2.innerHTML='';return;}
+_0x3e1b2.innerHTML='<img src="'+_0x1a2b2.src+'" alt="'+_0x1a2b2.title+'" class="w-full aspect-[460/215] object-cover opacity-70">';
+}
+function _0x2d9f3(){
+_0x2a3f2.innerHTML='';
+_0x4b5c.forEach(function(_0x3c4d2,_0x5f6a2){
+var _0x6a7b22=document.createElement('button');
+_0x6a7b22.className='w-1.5 h-1.5 rounded-full transition-colors '+(_0x5f6a2===_0x3c4d?'bg-voltrix-accent':'bg-white/15 hover:bg-white/30');
+_0x6a7b22.setAttribute('aria-label','Go to game '+(_0x5f6a2+1));
+_0x6a7b22.addEventListener('click',function(){
+if(_0x5f6a2!==_0x3c4d){_0x1b3c3(_0x5f6a2);}
+});
+_0x2a3f2.appendChild(_0x6a7b22);
+});
+}
+function _0x2d9f4(){return (_0x3c4d-1+_0x4b5c.length)%_0x4b5c.length;}
+function _0x4a5e3(){return (_0x3c4d+1)%_0x4b5c.length;}
+function _0x1b3c3(_0x5e6f2){
+if(_0x5e6f2===_0x3c4d)return;
+_0x6a7b2.classList.add('switching');
+_0x1c3a.classList.add('switching');
+setTimeout(function(){
+_0x3c4d=_0x5e6f2;
+_0x4b5c3(_0x4b5c[_0x3c4d]);
+_0x6c7d2(_0x4b5c[_0x2d9f4()],_0x4f2a);
+_0x6c7d2(_0x4b5c[_0x4a5e3()],_0x6c7d);
+_0x2d9f3();
+_0x6a7b2.classList.remove('switching');
+_0x1c3a.classList.remove('switching');
+},200);
+}
+function _0x4f2a2(){
+_0x4b5c3(_0x4b5c[_0x3c4d]);
+_0x6c7d2(_0x4b5c[_0x2d9f4()],_0x4f2a);
+_0x6c7d2(_0x4b5c[_0x4a5e3()],_0x6c7d);
+_0x2d9f3();
+}
+_0x1a2b.addEventListener('click',function(){_0x1b3c3(_0x2d9f4());});
+_0x3e1b.addEventListener('click',function(){_0x1b3c3(_0x4a5e3());});
+_0x4f2a.addEventListener('click',function(){_0x1b3c3(_0x2d9f4());});
+_0x6c7d.addEventListener('click',function(){_0x1b3c3(_0x4a5e3());});
+document.addEventListener('keydown',function(_0x5e6f3){
+if(_0x5e6f3.key==='ArrowLeft')_0x1b3c3(_0x2d9f4());
+if(_0x5e6f3.key==='ArrowRight')_0x1b3c3(_0x4a5e3());
+});
+_0x4f2a2();
+function _0x6b7c3(_0x1e3f2){
+_0x6b7c2.innerHTML='<img src="'+_0x1e3f2.src+'" alt="'+_0x1e3f2.title+'" class="game-cover w-full h-full object-cover">';
+_0x1e3f.textContent=_0x1e3f2.title;
+_0x2f4a.textContent=_0x1e3f2.status;
+_0x2f4a.className='text-xs mt-0.5 '+_0x1e3f2.statusColor;
+}
+function _0x3a5b2(_0x4c6d2,_0x5d7e2){
+if(!_0x4c6d2){_0x5d7e2.innerHTML='';return;}
+_0x5d7e2.innerHTML='<img src="'+_0x4c6d2.src+'" alt="'+_0x4c6d2.title+'" class="w-full aspect-[460/215] object-cover opacity-70">';
+}
+function _0x6e8f2(){
+_0x8a1b.innerHTML='';
+_0x6b7c.forEach(function(_0x7f9a2,_0x8a1b2){
+var _0x9b2c=document.createElement('button');
+_0x9b2c.className='w-1.5 h-1.5 rounded-full transition-colors '+(_0x8a1b2===_0x5f6a?'bg-voltrix-accent':'bg-white/15 hover:bg-white/30');
+_0x9b2c.setAttribute('aria-label','Go to launcher '+(_0x8a1b2+1));
+_0x9b2c.addEventListener('click',function(){
+if(_0x8a1b2!==_0x5f6a){_0x5f6a3(_0x8a1b2);}
+});
+_0x8a1b.appendChild(_0x9b2c);
+});
+}
+function _0x6e8f3(){return (_0x5f6a-1+_0x6b7c.length)%_0x6b7c.length;}
+function _0x7f9a3(){return (_0x5f6a+1)%_0x6b7c.length;}
+function _0x5f6a3(_0x8a1b3){
+if(_0x8a1b3===_0x5f6a)return;
+_0x4b5c2.classList.add('switching');
+_0x3a5b.classList.add('switching');
+setTimeout(function(){
+_0x5f6a=_0x8a1b3;
+_0x6b7c3(_0x6b7c[_0x5f6a]);
+_0x3a5b2(_0x6b7c[_0x6e8f3()],_0x4c6d);
+_0x3a5b2(_0x6b7c[_0x7f9a3()],_0x5d7e);
+_0x6e8f2();
+_0x4b5c2.classList.remove('switching');
+_0x3a5b.classList.remove('switching');
+},200);
+}
+function _0x8a1b4(){
+_0x6b7c3(_0x6b7c[_0x5f6a]);
+_0x3a5b2(_0x6b7c[_0x6e8f3()],_0x4c6d);
+_0x3a5b2(_0x6b7c[_0x7f9a3()],_0x5d7e);
+_0x6e8f2();
+}
+_0x6e8f.addEventListener('click',function(){_0x5f6a3(_0x6e8f3());});
+_0x7f9a.addEventListener('click',function(){_0x5f6a3(_0x7f9a3());});
+_0x4c6d.addEventListener('click',function(){_0x5f6a3(_0x6e8f3());});
+_0x5d7e.addEventListener('click',function(){_0x5f6a3(_0x7f9a3());});
+_0x8a1b4();
+var _0x1b3c4='voltrix_reviews';
+var _0x3c4d3=[];
+function _0x5e6f4(){
+try{
+var _0x6a7b23=localStorage.getItem(_0x1b3c4);
+if(_0x6a7b23){return JSON.parse(_0x6a7b23);}
+}catch(_0x1b3c5){}
+return _0x3c4d3.slice();
+}
+function _0x4a5e4(_0x5e6f5){
+try{localStorage.setItem(_0x1b3c4,JSON.stringify(_0x5e6f5));}catch(_0x1b3c6){}
+}
+var _0x1c3a3=_0x5e6f4();
+function _0x2d9f5(_0x4f2a3){
+var _0x6c7d3=document.createElement('div');
+_0x6c7d3.textContent=_0x4f2a3;
+return _0x6c7d3.innerHTML;
+}
+function _0x1a2b3(){
+var _0x3e1b3=_0x1c3a3.length;
+var _0x2a3f3=_0x1c3a3.reduce(function(_0x4b5c3,_0x6b7c3){return _0x4b5c3+_0x6b7c3.rating;},0);
+var _0x1e3f2=_0x3e1b3>0?(_0x2a3f3/_0x3e1b3).toFixed(1):'0.0';
+var _0x2f4a2=Math.round(parseFloat(_0x1e3f2));
+var _0x3a5b3='\u2605'.repeat(_0x2f4a2)+'\u2606'.repeat(5-_0x2f4a2);
+document.getElementById('avgRating').textContent=_0x1e3f2;
+document.getElementById('avgStars').textContent=_0x3a5b3;
+document.getElementById('reviewCount').textContent=_0x3e1b3>0?'Based on '+_0x3e1b3+' review'+(_0x3e1b3===1?'':'s'):'No reviews yet';
+}
+function _0x4c6d2(){
+var _0x5d7e2=document.getElementById('appReviews');
+if(!_0x5d7e2)return;
+_0x5d7e2.innerHTML=_0x1c3a3.map(function(_0x6e8f4){
+var _0x7f9a4='\u2605'.repeat(_0x6e8f4.rating)+'\u2606'.repeat(5-_0x6e8f4.rating);
+return '<div class="panel-card p-5 rounded-lg"><div class="flex items-center justify-between mb-3"><div><div class="text-sm font-semibold text-white">'+_0x2d9f5(_0x6e8f4.author)+'</div><div class="text-[11px] text-gray-500">'+_0x2d9f5(_0x6e8f4.role||'Voltrix user')+'</div></div><span class="text-xs text-amber-400 font-mono">'+_0x7f9a4+'</span></div><p class="text-sm text-gray-400 leading-relaxed mb-3">"'+_0x2d9f5(_0x6e8f4.text)+'"</p><div class="text-[10px] text-gray-600">'+_0x6e8f4.date+'</div></div>';
+}).join('');
+_0x1a2b3();
+}
+_0x4c6d2();
+var _0x8a1b5=document.getElementById('reviewModal');
+var _0x9b2c2=document.getElementById('termsModal');
+var _0x1b3c6=document.getElementById('openReviewModal');
+var _0x3c4d4=document.getElementById('closeReviewModal');
+var _0x5e6f6=document.getElementById('cancelReview');
+var _0x6a7b24=document.getElementById('openTerms');
+var _0x4a5e5=document.getElementById('closeTerms');
+var _0x1c3a4=document.getElementById('reviewForm');
+var _0x2d9f6=document.querySelectorAll('.star-input');
+var _0x4f2a4=document.getElementById('reviewRating');
+function _0x6c7d4(_0x1a2b4){_0x1a2b4.classList.add('active');document.body.style.overflow='hidden';}
+function _0x3e1b4(_0x2a3f4){_0x2a3f4.classList.remove('active');document.body.style.overflow='';}
+_0x1b3c6.addEventListener('click',function(){_0x6c7d4(_0x8a1b5);});
+_0x3c4d4.addEventListener('click',function(){_0x3e1b4(_0x8a1b5);});
+_0x5e6f6.addEventListener('click',function(){_0x3e1b4(_0x8a1b5);});
+_0x6a7b24.addEventListener('click',function(){_0x6c7d4(_0x9b2c2);});
+_0x4a5e5.addEventListener('click',function(){_0x3e1b4(_0x9b2c2);});
+_0x8a1b5.addEventListener('click',function(_0x4b5c4){if(_0x4b5c4.target===_0x8a1b5)_0x3e1b4(_0x8a1b5);});
+_0x9b2c2.addEventListener('click',function(_0x6b7c4){if(_0x6b7c4.target===_0x9b2c2)_0x3e1b4(_0x9b2c2);});
+document.addEventListener('keydown',function(_0x1e3f3){
+if(_0x1e3f3.key==='Escape'){
+if(_0x8a1b5.classList.contains('active'))_0x3e1b4(_0x8a1b5);
+if(_0x9b2c2.classList.contains('active'))_0x3e1b4(_0x9b2c2);
+}
+});
+function _0x2f4a3(_0x3a5b4){
+_0x2d9f6.forEach(function(_0x4c6d3){
+var _0x5d7e3=parseInt(_0x4c6d3.dataset.value);
+if(_0x5d7e3<=_0x3a5b4){_0x4c6d3.classList.add('active');}else{_0x4c6d3.classList.remove('active');}
+});
+_0x4f2a4.value=_0x3a5b4;
+}
+_0x2d9f6.forEach(function(_0x6e8f5){
+_0x6e8f5.addEventListener('click',function(){_0x2f4a3(parseInt(_0x6e8f5.dataset.value));});
+_0x6e8f5.addEventListener('mouseenter',function(){
+var _0x7f9a5=parseInt(_0x6e8f5.dataset.value);
+_0x2d9f6.forEach(function(_0x9b2c3){
+if(parseInt(_0x9b2c3.dataset.value)<=_0x7f9a5){_0x9b2c3.classList.add('active');}else{_0x9b2c3.classList.remove('active');}
+});
+});
+});
+document.getElementById('starInput').addEventListener('mouseleave',function(){_0x2f4a3(parseInt(_0x4f2a4.value)||0);});
+_0x1c3a4.addEventListener('submit',function(_0x1b3c7){
+_0x1b3c7.preventDefault();
+var _0x3c4d5=document.getElementById('reviewName').value.trim();
+var _0x5e6f7=document.getElementById('reviewRole').value.trim();
+var _0x6a7b25=document.getElementById('reviewText').value.trim();
+var _0x4a5e6=parseInt(_0x4f2a4.value);
+if(!_0x3c4d5||!_0x6a7b25||_0x4a5e6<1){alert('Please fill in your name, write a review and select a rating.');return;}
+var _0x1c3a5={author:_0x3c4d5,role:_0x5e6f7||'Voltrix user',text:_0x6a7b25,rating:_0x4a5e6,date:'Just now'};
+_0x1c3a3.unshift(_0x1c3a5);
+_0x4a5e4(_0x1c3a3);
+_0x4c6d2();
+_0x1c3a4.reset();
+_0x2f4a3(0);
+_0x3e1b4(_0x8a1b5);
+});
+})();
+</script>
 </body>
 </html>
