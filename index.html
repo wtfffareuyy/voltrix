@@ -557,29 +557,35 @@ _0x2d9f(_0x4f2a[2]);
 })();
 </script>
 
-<script>
-(function(){
-var KEY='voltrix_downloads';
-var BASE=12847;
-function getCount(){
-var v=localStorage.getItem(KEY);
-if(!v){localStorage.setItem(KEY,BASE);return BASE;}
-return parseInt(v,10);
-}
-function setCount(v){localStorage.setItem(KEY,v);}
-function render(){
-var el=document.getElementById('downloadCounter');
-if(el){el.textContent=getCount().toLocaleString('en-US');}
-}
-render();
-document.querySelectorAll('.download-btn').forEach(function(btn){
-btn.addEventListener('click',function(){
-setCount(getCount()+1);
-render();
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBMuD7MlDUq0OL31fwpYc3-x_cEhSUV0yg",
+  authDomain: "indianscamma-eefdf.firebaseapp.com",
+  databaseURL: "https://indianscamma-eefdf-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "indianscamma-eefdf",
+  storageBucket: "indianscamma-eefdf.firebasestorage.app",
+  messagingSenderId: "421328283033",
+  appId: "1:421328283033:web:86e74ee9eb125c1a35df08",
+  measurementId: "G-33S86SBXBH"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const counterRef = ref(db, 'downloads');
+
+onValue(counterRef, (snap) => {
+  const el = document.getElementById('downloadCounter');
+  if (el) el.textContent = (snap.val() || 0).toLocaleString('en-US');
 });
+
+document.querySelectorAll('.download-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    runTransaction(counterRef, (current) => (current || 0) + 1);
+  });
 });
-window.addEventListener('storage',function(e){if(e.key===KEY)render();});
-})();
 </script>
 
 <script>
