@@ -86,10 +86,57 @@ header,section,footer{position:relative;z-index:1}
 .social-icon:hover{transform:scale(1.1);color:#fff}
 .download-box{border:0;border-radius:12px}
 .linux-disabled{opacity:.4;pointer-events:none;filter:grayscale(1)}
+.auth-tabs{display:flex;gap:4px;background:#0f1113;padding:4px;border-radius:10px;margin-bottom:18px}
+.auth-tabs button{flex:1;padding:8px;border-radius:8px;font-size:13px;color:#9ca3af;transition:background .2s,color .2s}
+.auth-tabs button.on{background:#1b1e22;color:#fff}
+.oauth-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:.65rem;border-radius:.5rem;font-size:.875rem;font-weight:600;color:#fff;transition:filter .2s,transform .2s}
+.oauth-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.oauth-discord{background:#5865F2}.oauth-google{background:#1b1e22}
+.auth-sep{display:flex;align-items:center;gap:10px;color:#4b5563;font-size:11px;margin:16px 0}
+.auth-sep:before,.auth-sep:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.06)}
+.auth-msg{font-size:12px;min-height:18px;margin-top:10px}
+.auth-msg.err{color:#f87171}.auth-msg.ok{color:#34d399}
+#gamesCarousel .c3d-card{border-radius:0}
+#gamesCarousel .vx-badge{position:absolute;top:12px;left:12px;width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.7));pointer-events:none;z-index:2}
+#launchersCarousel .c3d-card{background:transparent;box-shadow:none;border-radius:0;overflow:visible}
+#launchersCarousel .c3d-card.is-active{box-shadow:none}
+#launchersCarousel .c3d-card .glare{display:none}
+#launchersCarousel .launcher-tile img{width:46%;max-height:70%;filter:drop-shadow(0 0 18px rgba(255,255,255,.25))}
+#launchersCarousel .c3d-card.is-active .launcher-tile img{filter:drop-shadow(0 0 26px rgba(120,170,255,.55))}
+/* power-on intro */
+#vxIntro{position:fixed;inset:0;z-index:9999;background:#08090a;display:flex;align-items:center;justify-content:center;flex-direction:column;overflow:hidden;cursor:pointer}
+#vxIntro .scan{position:absolute;left:0;right:0;top:50%;height:2px;background:#4f8cff;box-shadow:0 0 24px 6px rgba(79,140,255,.7);transform:scaleX(0);animation:vxScan .55s cubic-bezier(.7,0,.2,1) .15s forwards,vxScanOut .35s ease 1.05s forwards}
+#vxIntro .core{position:relative;display:flex;flex-direction:column;align-items:center;opacity:0;animation:vxOn 1.1s steps(1) .7s forwards}
+#vxIntro .core img{width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 0 30px rgba(79,140,255,.65));animation:vxPulse 1.6s ease-in-out 1.6s infinite}
+#vxIntro .word{margin-top:22px;font-weight:800;letter-spacing:.55em;padding-left:.55em;color:#fff;font-size:22px;text-shadow:0 0 18px rgba(79,140,255,.8)}
+#vxIntro .bar{margin-top:26px;width:220px;height:2px;background:rgba(255,255,255,.08);overflow:hidden}
+#vxIntro .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4f8cff,#9cc0ff);box-shadow:0 0 12px #4f8cff;animation:vxBar 1.2s cubic-bezier(.6,0,.2,1) 1.05s forwards}
+#vxIntro .boot{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.25em;color:#4b5563}
+#vxIntro.done{animation:vxOut .7s cubic-bezier(.7,0,.2,1) forwards}
+@keyframes vxScan{to{transform:scaleX(1)}}
+@keyframes vxScanOut{to{transform:scaleX(1) scaleY(60);opacity:0}}
+@keyframes vxOn{0%{opacity:1}6%{opacity:.1}12%{opacity:1}18%{opacity:.3}24%{opacity:1}100%{opacity:1}}
+@keyframes vxPulse{0%,100%{filter:drop-shadow(0 0 22px rgba(79,140,255,.5))}50%{filter:drop-shadow(0 0 44px rgba(79,140,255,.95))}}
+@keyframes vxBar{to{width:100%}}
+@keyframes vxOut{to{opacity:0;transform:scale(1.08);filter:blur(6px);visibility:hidden}}
+@media (prefers-reduced-motion:reduce){#vxIntro{display:none}}
 </style>
 </head>
 <body class="font-sans antialiased selection:bg-voltrix-accent selection:text-white">
 
+<div id="vxIntro" aria-hidden="true"><div class="scan"></div>
+<div class="core"><img src="https://cdn.corenexis.com/f/b2y0oAps.png" alt=""><div class="word">VOLTRIX</div><div class="bar"><i></i></div><div class="boot" id="vxBoot">POWERING ON</div></div></div>
+<script>
+(function(){var el=document.getElementById('vxIntro');if(!el)return;
+ var seen=false;try{seen=sessionStorage.getItem('vxIntro')==='1';sessionStorage.setItem('vxIntro','1')}catch(e){}
+ if(seen||matchMedia('(prefers-reduced-motion: reduce)').matches){el.remove();return}
+ document.documentElement.style.overflow='hidden';
+ var msgs=['POWERING ON','LOADING PROFILES','OPTIMIZING','READY'],k=0,b=document.getElementById('vxBoot');
+ var iv=setInterval(function(){k=Math.min(k+1,msgs.length-1);b.textContent=msgs[k]},420);
+ function end(){clearInterval(iv);el.classList.add('done');document.documentElement.style.overflow='';setTimeout(function(){el.remove()},750)}
+ var t=setTimeout(end,2500);el.addEventListener('click',function(){clearTimeout(t);end()});
+})();
+</script>
 <canvas id="bg-canvas"></canvas>
 
 <header class="fixed top-0 left-0 w-full z-50 panel px-4 lg:px-8 py-3">
@@ -118,6 +165,7 @@ header,section,footer{position:relative;z-index:1}
 <i class="fa-brands fa-discord text-xl"></i>
 </a>
 </div>
+<button id="acctBtn" class="px-3 py-2 rounded text-sm font-medium bg-white/5 hover:bg-white/10 text-white transition-colors flex items-center gap-2"><img id="acctAvatar" class="w-5 h-5 rounded-full object-cover hidden" alt=""><i id="acctIcon" class="fa-solid fa-user text-xs"></i><span id="acctLabel" class="hidden sm:inline">Sign in</span></button>
 <a href="https://gofile.io/d/BkBX3mHK" target="_blank" rel="noopener noreferrer" class="download-btn px-4 py-2 rounded text-sm font-medium bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors flex items-center gap-2">
 <i class="fa-solid fa-download text-xs"></i>
 <span class="hidden sm:inline">Download</span>
@@ -498,6 +546,16 @@ Coming Soon
 </div>
 </footer>
 
+
+<div id="authModal" class="modal-backdrop">
+<div class="modal-content p-8" style="max-width:440px">
+<div class="flex items-start justify-between mb-5">
+<h2 id="authTitle" class="text-xl font-semibold text-white flex items-center gap-2"><i class="fa-solid fa-user text-voltrix-accent text-sm"></i><span>Voltrix account</span></h2>
+<button id="closeAuth" class="text-gray-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<div id="authBody"></div>
+</div>
+</div>
 <div id="termsModal" class="modal-backdrop">
 <div class="modal-content p-8">
 <div class="flex items-start justify-between mb-6">
@@ -816,7 +874,7 @@ function Carousel(root,items,opt){
 }
 var gInfo=document.getElementById('gameInfo');
 var games=Carousel(document.getElementById('gamesCarousel'),GAMES,{dots:'dotsContainer',start:2,angle:38,depth:170,autoplay:4500,
-  render:function(g){return gameImg(g)+'<div class="shade"></div><div class="label">'+esc(g.title)+'<small>'+esc(g.genre)+'</small></div>';},
+  render:function(g){return gameImg(g)+'<img class="vx-badge" src="https://cdn.corenexis.com/f/b2y0oAps.png" alt=""><div class="shade"></div><div class="label">'+esc(g.title)+'<small>'+esc(g.genre)+'</small></div>';},
   onChange:function(g){gInfo.classList.add('fading');setTimeout(function(){
     document.getElementById('mainTitle').textContent=g.title;document.getElementById('mainGenre').textContent=g.genre;
     var tags=g.premium?['<span class="tag premium"><i class="fa-solid fa-ticket text-[9px]"></i>Premium profile</span>','<span class="tag">Auto-detected</span>']
@@ -825,9 +883,9 @@ var games=Carousel(document.getElementById('gamesCarousel'),GAMES,{dots:'dotsCon
 });
 var lInfo=document.getElementById('launcherInfo');
 Carousel(document.getElementById('launchersCarousel'),LAUNCHERS,{dots:'launcherDotsContainer',start:0,angle:40,depth:150,autoplay:3800,
-  render:function(l){return '<div class="launcher-tile" style="background:radial-gradient(circle at 30% 20%,'+l.c2+','+l.c1+' 75%)">'
+  render:function(l){return '<div class="launcher-tile">'
     +'<img src="https://cdn.simpleicons.org/'+l.icon+'/ffffff" alt="'+esc(l.title)+'" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'">'
-    +'<span class="fallback">'+esc(l.title)+'</span></div><div class="shade" style="opacity:.55"></div>';},
+    +'<span class="fallback">'+esc(l.title)+'</span></div>';},
   onChange:function(l){lInfo.classList.add('fading');setTimeout(function(){
     document.getElementById('launcherMainTitle').textContent=l.title;var st=document.getElementById('launcherMainStatus');
     st.textContent=l.status;st.className='text-xs mt-0.5 '+l.statusColor;lInfo.classList.remove('fading');},160);}
@@ -945,6 +1003,128 @@ _0x2f4a3(0);
 _0x3e1b4(_0x8a1b5);
 });
 })();
+</script>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const sb = createClient("https://gytphcnsxyadnhyhpaou.supabase.co", "sb_publishable_5sKZXTI79xPTNtn9RkiDbA_eU2fD3r0",
+  { auth: { flowType: "pkce", detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
+const BACK = location.origin + location.pathname;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => { const d = document.createElement("div"); d.textContent = s ?? ""; return d.innerHTML; };
+const modal = $("authModal"), body = $("authBody");
+let user = null, profile = null, view = "signin";
+
+function open(v) { if (v) view = v; render(); modal.classList.add("active"); document.body.style.overflow = "hidden"; }
+function close() { modal.classList.remove("active"); document.body.style.overflow = ""; }
+$("closeAuth").onclick = close;
+modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+$("acctBtn").onclick = () => open(user ? "profile" : "signin");
+function msg(t, ok) { const m = $("authMsg"); if (m) { m.textContent = t; m.className = "auth-msg " + (ok ? "ok" : "err"); } }
+function busy(b) { body.querySelectorAll("button,input").forEach((el) => (el.disabled = b)); }
+
+const oauthHTML = `
+<button class="oauth-btn oauth-discord" data-oauth="discord"><i class="fa-brands fa-discord"></i>Continue with Discord</button>
+<button class="oauth-btn oauth-google mt-2" data-oauth="google"><i class="fa-brands fa-google"></i>Continue with Google</button>
+<div class="auth-sep">or with email</div>`;
+
+function render() {
+  if (view === "profile" && user) {
+    const name = profile?.username || user.email;
+    const av = profile?.avatar_url || user.user_metadata?.avatar_url;
+    body.innerHTML = `
+      <div class="flex items-center gap-4 mb-6">
+        ${av ? `<img src="${esc(av)}" class="w-14 h-14 rounded-full object-cover" alt="">` : `<div class="w-14 h-14 rounded-full bg-voltrix-accent/15 text-voltrix-accent flex items-center justify-center text-xl font-bold">${esc(name[0]?.toUpperCase())}</div>`}
+        <div><div class="text-white font-semibold">${esc(name)}</div><div class="text-xs text-gray-500">${esc(user.email || "")}</div></div>
+      </div>
+      <label class="block text-xs text-gray-400 mb-1.5">Username</label>
+      <div class="flex gap-2"><input id="pfName" class="form-input" maxlength="24" value="${esc(profile?.username || "")}"><button id="pfSave" class="px-4 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white">Save</button></div>
+      <p class="text-xs text-gray-500 mt-5 leading-relaxed">Use this account to log in inside the Voltrix app: <b class="text-gray-300">Settings &rarr; Account</b>.</p>
+      <div class="auth-msg" id="authMsg"></div>
+      <button id="pfOut" class="w-full mt-4 py-2.5 rounded text-sm font-medium bg-white/5 hover:bg-white/10 text-white">Sign out</button>`;
+    $("pfSave").onclick = async () => {
+      const v = $("pfName").value.trim();
+      if (v.length < 3) return msg("Username must be 3-24 characters.");
+      busy(true); const { error } = await sb.from("profiles").update({ username: v }).eq("id", user.id); busy(false);
+      if (error) return msg(error.message); profile = { ...profile, username: v }; paintHeader(); msg("Saved.", true);
+    };
+    $("pfOut").onclick = async () => { await sb.auth.signOut(); close(); };
+    return;
+  }
+  if (view === "newpass") {
+    body.innerHTML = `<p class="text-sm text-gray-400 mb-4">Choose a new password.</p>
+      <input id="npPass" type="password" class="form-input" placeholder="New password (min 8 characters)" autocomplete="new-password">
+      <button id="npGo" class="w-full mt-4 py-2.5 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white">Update password</button>
+      <div class="auth-msg" id="authMsg"></div>`;
+    $("npGo").onclick = async () => {
+      const p = $("npPass").value; if (p.length < 8) return msg("At least 8 characters.");
+      busy(true); const { error } = await sb.auth.updateUser({ password: p }); busy(false);
+      if (error) return msg(error.message); msg("Password updated.", true); setTimeout(() => open("profile"), 900);
+    };
+    return;
+  }
+  const up = view === "signup", reset = view === "reset";
+  body.innerHTML = `
+    ${reset ? "" : `<div class="auth-tabs"><button data-v="signin" class="${up ? "" : "on"}">Sign in</button><button data-v="signup" class="${up ? "on" : ""}">Create account</button></div>${oauthHTML}`}
+    ${reset ? `<p class="text-sm text-gray-400 mb-4">We'll email you a link to reset your password.</p>` : ""}
+    <form id="authForm" class="space-y-3">
+      ${up ? `<input id="auName" class="form-input" placeholder="Username" maxlength="24" autocomplete="username" required>` : ""}
+      <input id="auEmail" type="email" class="form-input" placeholder="Email" autocomplete="email" required>
+      ${reset ? "" : `<input id="auPass" type="password" class="form-input" placeholder="Password${up ? " (min 8 characters)" : ""}" autocomplete="${up ? "new-password" : "current-password"}" required>`}
+      <button type="submit" class="w-full py-2.5 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white">${up ? "Create account" : reset ? "Send reset link" : "Sign in"}</button>
+    </form>
+    <div class="auth-msg" id="authMsg"></div>
+    ${up || reset ? "" : `<button data-v="reset" class="text-xs text-gray-500 hover:text-white mt-1">Forgot password?</button>`}
+    ${reset ? `<button data-v="signin" class="text-xs text-gray-500 hover:text-white mt-1">&larr; Back to sign in</button>` : ""}
+    ${up ? `<p class="text-[11px] text-gray-600 mt-3">By creating an account you accept the Terms of Service.</p>` : ""}`;
+  body.querySelectorAll("[data-v]").forEach((b) => (b.onclick = () => { view = b.dataset.v; render(); }));
+  body.querySelectorAll("[data-oauth]").forEach((b) => (b.onclick = async () => {
+    busy(true); const { error } = await sb.auth.signInWithOAuth({ provider: b.dataset.oauth, options: { redirectTo: BACK } });
+    if (error) { busy(false); msg(error.message); }
+  }));
+  $("authForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const email = $("auEmail").value.trim();
+    busy(true);
+    try {
+      if (reset) {
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: BACK });
+        if (error) throw error; msg("Check your inbox for the reset link.", true);
+      } else if (up) {
+        const username = $("auName").value.trim(), password = $("auPass").value;
+        if (username.length < 3) throw new Error("Username must be 3-24 characters.");
+        if (password.length < 8) throw new Error("Password must be at least 8 characters.");
+        const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username }, emailRedirectTo: BACK } });
+        if (error) throw error;
+        if (!data.session) msg("Almost done: confirm your email, then sign in.", true);
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password: $("auPass").value });
+        if (error) throw error;
+      }
+    } catch (err) { msg(err.message || String(err)); }
+    busy(false);
+  };
+}
+
+async function loadProfile() {
+  if (!user) { profile = null; return; }
+  const { data } = await sb.from("profiles").select("username,avatar_url").eq("id", user.id).maybeSingle();
+  profile = data;
+}
+function paintHeader() {
+  const av = profile?.avatar_url || user?.user_metadata?.avatar_url;
+  $("acctLabel").textContent = user ? (profile?.username || "Account") : "Sign in";
+  $("acctAvatar").classList.toggle("hidden", !(user && av)); if (av) $("acctAvatar").src = av;
+  $("acctIcon").classList.toggle("hidden", !!(user && av));
+}
+sb.auth.onAuthStateChange((event, session) => {
+  user = session?.user || null;
+  setTimeout(async () => {
+    await loadProfile(); paintHeader();
+    if (event === "PASSWORD_RECOVERY") open("newpass");
+    else if (event === "SIGNED_IN" && modal.classList.contains("active")) open("profile");
+  }, 0);
+});
 </script>
 </body>
 </html>
