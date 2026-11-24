@@ -1117,6 +1117,10 @@ function paintHeader() {
   $("acctAvatar").classList.toggle("hidden", !(user && av)); if (av) $("acctAvatar").src = av;
   $("acctIcon").classList.toggle("hidden", !!(user && av));
 }
+// show OAuth errors returned in the URL (e.g. Discord)
+(() => { const q = new URLSearchParams(location.search + "&" + location.hash.slice(1));
+  const err = q.get("error_description") || q.get("error");
+  if (err) { history.replaceState(null, "", BACK); open("signin"); setTimeout(() => msg("Login failed: " + err.replace(/\+/g, " ")), 50); } })();
 sb.auth.onAuthStateChange((event, session) => {
   user = session?.user || null;
   setTimeout(async () => {
