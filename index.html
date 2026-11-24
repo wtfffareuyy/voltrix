@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script>tailwind.config={theme:{extend:{colors:{voltrix:{bg:'#08090a',surface:'#0f1113',card:'#131517',muted:'#6b7280',accent:'#4f8cff'}},fontFamily:{sans:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
 <style>
+*,*::before,*::after{border-color:transparent}
 body{background-color:#08090a;color:#d1d5db;overflow-x:hidden;position:relative}
 #bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
 header,section,footer{position:relative;z-index:1}
@@ -24,31 +25,47 @@ header,section,footer{position:relative;z-index:1}
 ::-webkit-scrollbar-thumb:hover{background:#2a2e33}
 .accent-line{background:linear-gradient(90deg,#4f8cff 0,transparent 100%);height:1px}
 .status-dot{box-shadow:0 0 6px rgba(52,211,153,.5)}
-.game-stage{position:relative;display:flex;align-items:flex-start;justify-content:center;gap:12px;min-height:420px;padding-top:20px;overflow:hidden}
-.game-main{flex:1;max-width:720px;transition:opacity .35s ease,transform .35s ease;opacity:1;transform:scale(1)}
-.game-main.switching{opacity:0;transform:scale(.97)}
-.game-side{width:120px;flex-shrink:0;opacity:.4;transition:opacity .3s ease;cursor:pointer;display:none;margin-top:40px}
-.game-side:hover{opacity:.7}
-@media(min-width:768px){.game-side{display:block;width:160px}}
-@media(min-width:1024px){.game-side{width:220px}}
-.nav-arrow{transition:color .2s ease,opacity .2s ease}
-.nav-arrow:hover{color:#fff}
-.game-cover{transition:filter .3s ease;filter:grayscale(15%) brightness(.9)}
-.game-cover:hover{filter:grayscale(0) brightness(1)}
-.game-title{transition:opacity .35s ease}
-.game-title.switching{opacity:0}
-#reviewsContainer{max-height:180px;overflow-y:auto}
-#reviewsContainer::-webkit-scrollbar{width:4px}
-#reviewsContainer::-webkit-scrollbar-thumb{background:#2a2e33;border-radius:2px}
-.launcher-stage{position:relative;display:flex;align-items:flex-start;justify-content:center;gap:12px;min-height:300px;padding-top:20px;overflow:hidden}
-.launcher-main{flex:1;max-width:720px;transition:opacity .35s ease,transform .35s ease;opacity:1;transform:scale(1)}
-.launcher-main.switching{opacity:0;transform:scale(.97)}
-.launcher-side{width:120px;flex-shrink:0;opacity:.4;transition:opacity .3s ease;cursor:pointer;display:none;margin-top:40px}
-.launcher-side:hover{opacity:.7}
-@media(min-width:768px){.launcher-side{display:block;width:160px}}
-@media(min-width:1024px){.launcher-side{width:220px}}
-.launcher-title{transition:opacity .35s ease}
-.launcher-title.switching{opacity:0}
+.hero-3d{perspective:1200px}
+.hero-inner{transform-style:preserve-3d;transition:transform .25s ease-out;will-change:transform}
+.hero-inner h1{transform:translateZ(60px)}
+.hero-inner p{transform:translateZ(30px)}
+.hero-inner .hero-cta{transform:translateZ(45px)}
+.hero-glow{position:absolute;left:50%;top:38%;width:900px;height:520px;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(79,140,255,.20),transparent 65%);filter:blur(20px);pointer-events:none;z-index:0}
+.hero-logo{width:84px;height:84px;margin:0 auto 26px;transform:translateZ(90px);animation:floaty 6s ease-in-out infinite;filter:drop-shadow(0 18px 30px rgba(79,140,255,.35))}
+@keyframes floaty{0%,100%{transform:translateZ(90px) translateY(0) rotateY(-12deg)}50%{transform:translateZ(90px) translateY(-10px) rotateY(12deg)}}
+.tilt{transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease;will-change:transform}
+.tilt:hover{box-shadow:0 30px 60px -25px rgba(0,0,0,.85),0 0 40px -18px rgba(79,140,255,.45)}
+.tilt .tilt-pop{transform:translateZ(36px)}
+/* 3D carousels */
+.c3d{position:relative;perspective:1500px;perspective-origin:50% 35%;user-select:none;-webkit-user-select:none;touch-action:pan-y;padding:10px 0 0}
+.c3d-stage{position:relative;height:var(--sh);transform-style:preserve-3d}
+.c3d-floor{position:absolute;left:50%;bottom:-10px;width:80%;height:140px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(79,140,255,.18),transparent 70%);filter:blur(10px);pointer-events:none}
+.c3d-card{position:absolute;left:50%;top:0;width:var(--cw);height:var(--chh);margin-left:calc(var(--cw) / -2);border-radius:18px;overflow:hidden;background:#0f1113;cursor:pointer;
+  transition:transform .75s cubic-bezier(.2,.8,.2,1),opacity .5s ease,filter .5s ease,box-shadow .5s ease;will-change:transform;
+  box-shadow:0 35px 60px -25px rgba(0,0,0,.9);-webkit-box-reflect:below 16px linear-gradient(transparent 72%,rgba(255,255,255,.16))}
+.c3d-card.is-active{box-shadow:0 45px 80px -25px rgba(0,0,0,.95),0 0 70px -12px rgba(79,140,255,.55)}
+.c3d-card img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;image-rendering:auto}
+.c3d-card .shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 52%,rgba(8,9,10,.9));pointer-events:none}
+.c3d-card .glare{position:absolute;inset:0;background:radial-gradient(circle at var(--gx,50%) var(--gy,0%),rgba(255,255,255,.28),transparent 55%);opacity:0;transition:opacity .3s;pointer-events:none;mix-blend-mode:overlay}
+.c3d-card.is-active:hover .glare{opacity:1}
+.c3d-card .label{position:absolute;left:16px;right:16px;bottom:14px;color:#fff;font-weight:600;font-size:15px;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+.c3d-card .label small{display:block;font-weight:500;font-size:11px;color:#9ca3af;margin-top:2px}
+.c3d-arrow{position:absolute;top:calc(var(--sh) / 2);transform:translateY(-50%);z-index:200;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#9ca3af;background:rgba(255,255,255,.04);backdrop-filter:blur(6px);transition:color .2s,background .2s}
+.c3d-arrow:hover{color:#fff;background:rgba(79,140,255,.25)}
+.c3d-prev{left:0}.c3d-next{right:0}
+.c3d-dots{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:34px}
+.c3d-dots button{width:6px;height:6px;border-radius:9999px;background:rgba(255,255,255,.15);transition:all .3s}
+.c3d-dots button.on{width:22px;background:#4f8cff}
+#gamesCarousel{--cw:250px;--chh:375px;--sh:400px}
+#launchersCarousel{--cw:320px;--chh:190px;--sh:215px}
+@media(max-width:767px){#gamesCarousel{--cw:180px;--chh:270px;--sh:295px}#launchersCarousel{--cw:240px;--chh:142px;--sh:165px}}
+.launcher-tile{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.launcher-tile img{width:38%;height:auto;max-height:52%;object-fit:contain;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+.launcher-tile .fallback{display:none;font-size:22px;font-weight:800;color:#fff}
+.game-info{text-align:center;margin-top:28px;transition:opacity .3s ease}
+.game-info.fading{opacity:0}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:9999px;background:rgba(255,255,255,.05);color:#9ca3af}
+.tag.premium{background:rgba(79,140,255,.14);color:#8fb4ff}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
 .modal-backdrop.active{display:flex}
 .modal-content{background:#131517;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;border-radius:.5rem}
@@ -67,8 +84,7 @@ header,section,footer{position:relative;z-index:1}
 #downloadCounter{font-family:'JetBrains Mono',monospace}
 .social-icon{transition:transform .2s, color .2s}
 .social-icon:hover{transform:scale(1.1);color:#fff}
-.download-box{border:1px solid rgba(255,255,255,0.05);border-radius:12px;transition:border-color .2s}
-.download-box:hover{border-color:rgba(79,140,255,0.3)}
+.download-box{border:0;border-radius:12px}
 .linux-disabled{opacity:.4;pointer-events:none;filter:grayscale(1)}
 </style>
 </head>
@@ -110,8 +126,10 @@ header,section,footer{position:relative;z-index:1}
 </div>
 </header>
 
-<section class="relative pt-32 pb-20 md:pt-40 md:pb-24 px-4">
-<div class="max-w-4xl mx-auto text-center">
+<section class="relative pt-32 pb-20 md:pt-40 md:pb-24 px-4 hero-3d">
+<div class="hero-glow"></div>
+<div class="max-w-4xl mx-auto text-center hero-inner" id="heroInner">
+<img src="https://cdn.corenexis.com/f/b2y0oAps.png" alt="" class="hero-logo rounded-2xl">
 <div class="inline-flex items-center gap-2 px-3 py-1 rounded text-xs text-gray-400 mb-8 bg-white/5">
 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 status-dot"></span>
 <span>v1.4.0</span>
@@ -122,7 +140,7 @@ Maximize your gaming<br class="hidden sm:inline"/> PC's performance
 <p class="max-w-2xl mx-auto text-base md:text-lg text-gray-400 mb-10 leading-relaxed">
 Unify your launchers, reduce network latency, optimize your GPU and customize your display in a single minimal interface.
 </p>
-<div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
+<div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16 hero-cta">
 <a href="https://gofile.io/d/hERjfTFh" target="_blank" rel="noopener noreferrer" class="download-btn w-full sm:w-auto px-6 py-3 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors flex items-center justify-center gap-2">
 <i class="fa-solid fa-download text-xs"></i>
 <span>Download for free</span>
@@ -233,31 +251,18 @@ Themes, accent colors and adjustment of background sphere quantity and speed.
 <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Supported games</h2>
 <p class="text-gray-500 text-sm">Dedicated optimization profiles and automatic detection for the most played titles.</p>
 </div>
-<div class="relative">
-<div class="game-stage">
-<button id="prevBtn" class="nav-arrow absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Previous">
-<i class="fa-solid fa-chevron-left text-xl"></i>
-</button>
-<div id="sideLeft" class="game-side rounded-lg overflow-hidden"></div>
-<div id="gameMain" class="game-main rounded-lg overflow-hidden bg-voltrix-card">
-<div class="aspect-[460/215] bg-voltrix-surface flex items-center justify-center relative" id="mainImageContainer">
-<img id="mainImage" src="" alt="" class="game-cover w-full h-full object-cover">
+<div class="c3d" id="gamesCarousel">
+<button class="c3d-arrow c3d-prev" aria-label="Previous"><i class="fa-solid fa-chevron-left"></i></button>
+<div class="c3d-stage"></div>
+<div class="c3d-floor"></div>
+<button class="c3d-arrow c3d-next" aria-label="Next"><i class="fa-solid fa-chevron-right"></i></button>
 </div>
-<div class="p-4">
-<div id="gameTitle" class="game-title">
-<span id="mainTitle" class="text-base font-semibold text-white"></span>
+<div class="game-info" id="gameInfo">
+<div id="mainTitle" class="text-lg font-semibold text-white"></div>
 <p id="mainGenre" class="text-xs text-gray-500 mt-0.5"></p>
+<div id="gameTags" class="flex flex-wrap items-center justify-center gap-2 mt-3"></div>
 </div>
-<div id="reviewsContainer" class="mt-4 space-y-2"></div>
-</div>
-</div>
-<div id="sideRight" class="game-side rounded-lg overflow-hidden"></div>
-<button id="nextBtn" class="nav-arrow absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Next">
-<i class="fa-solid fa-chevron-right text-xl"></i>
-</button>
-</div>
-<div class="flex items-center justify-center gap-1.5 mt-5" id="dotsContainer"></div>
-</div>
+<div class="c3d-dots" id="dotsContainer"></div>
 <p class="text-xs text-gray-600 mt-6 text-center">
 <i class="fa-brands fa-steam mr-1"></i> Steam covers provided via public CDN. Fortnite and Roblox are detected through their respective launchers.
 </p>
@@ -365,30 +370,17 @@ Voltrix is not a black box: every system tweak can be individually enabled or di
 <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Supported launchers</h2>
 <p class="text-gray-500 text-sm">Automatic detection and integration with all major game launchers.</p>
 </div>
-<div class="relative">
-<div class="launcher-stage">
-<button id="launcherPrevBtn" class="nav-arrow absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Previous launcher">
-<i class="fa-solid fa-chevron-left text-xl"></i>
-</button>
-<div id="launcherSideLeft" class="launcher-side rounded-lg overflow-hidden"></div>
-<div id="launcherMain" class="launcher-main rounded-lg overflow-hidden bg-voltrix-card">
-<div class="aspect-[460/215] bg-voltrix-surface flex items-center justify-center relative" id="launcherMainImageContainer">
-<img id="launcherMainImage" src="" alt="" class="game-cover w-full h-full object-cover">
+<div class="c3d" id="launchersCarousel">
+<button class="c3d-arrow c3d-prev" aria-label="Previous launcher"><i class="fa-solid fa-chevron-left"></i></button>
+<div class="c3d-stage"></div>
+<div class="c3d-floor"></div>
+<button class="c3d-arrow c3d-next" aria-label="Next launcher"><i class="fa-solid fa-chevron-right"></i></button>
 </div>
-<div class="p-4">
-<div id="launcherTitle" class="launcher-title">
-<span id="launcherMainTitle" class="text-base font-semibold text-white"></span>
+<div class="game-info" id="launcherInfo">
+<div id="launcherMainTitle" class="text-lg font-semibold text-white"></div>
 <p id="launcherMainStatus" class="text-xs mt-0.5"></p>
 </div>
-</div>
-</div>
-<div id="launcherSideRight" class="launcher-side rounded-lg overflow-hidden"></div>
-<button id="launcherNextBtn" class="nav-arrow absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center text-gray-500" aria-label="Next launcher">
-<i class="fa-solid fa-chevron-right text-xl"></i>
-</button>
-</div>
-<div class="flex items-center justify-center gap-1.5 mt-5" id="launcherDotsContainer"></div>
-</div>
+<div class="c3d-dots" id="launcherDotsContainer"></div>
 </section>
 
 <section id="security" class="py-20 px-4 max-w-7xl mx-auto">
@@ -751,160 +743,112 @@ document.querySelectorAll('.download-btn').forEach(btn => {
 
 <script>
 (function(){
-var _0x2a3f=['\x46\x6f\x72\x74\x6e\x69\x74\x65','\x42\x61\x74\x74\x6c\x65\x20\x52\x6f\x79\x61\x6c\x65','\x52\x6f\x62\x6c\x6f\x78','\x53\x61\x6e\x64\x62\x6f\x78','\x52\x61\x69\x6e\x62\x6f\x77\x20\x53\x69\x78\x20\x53\x69\x65\x67\x65','\x54\x61\x63\x74\x69\x63\x61\x6c\x20\x53\x68\x6f\x6f\x74\x65\x72','\x43\x6f\x75\x6e\x74\x65\x72\x2d\x53\x74\x72\x69\x6b\x65\x20\x32','\x46\x50\x53','\x53\x65\x61\x20\x6f\x66\x20\x54\x68\x69\x65\x76\x65\x73','\x41\x64\x76\x65\x6e\x74\x75\x72\x65','\x47\x54\x41\x20\x56\x20\x45\x6e\x68\x61\x6e\x63\x65\x64','\x4f\x70\x65\x6e\x20\x57\x6f\x72\x6c\x64','\x54\x68\x65\x20\x46\x6f\x72\x65\x73\x74','\x53\x75\x72\x76\x69\x76\x61\x6c\x20\x48\x6f\x72\x72\x6f\x72','\x44\x65\x61\x64\x20\x62\x79\x20\x44\x61\x79\x6c\x69\x67\x68\x74','\x48\x6f\x72\x72\x6f\x72','\x53\x75\x62\x6e\x61\x75\x74\x69\x63\x61','\x53\x75\x72\x76\x69\x76\x61\x6c','\x47\x54\x41\x20\x56'];
-var _0x4b5c=[
-{title:_0x2a3f[0],genre:_0x2a3f[1],type:'image',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fprod.assets.earlygamecdn.com%2Fimages%2FFortnite-Cash-Cups.jpg%3Ftransform%3DCard%2BPublication%2BWebp&f=1&nofb=1&ipt=632eb13a5bafb87b0265f31939fbd94c47f2dd1c4361956c7a8f37708d4adb17&ipo=images',reviews:[{author:'xX_ProGamer_Xx',text:'Best battle royale out there. Building mechanics are unmatched, and the constant updates keep it fresh.',rating:5,playtime:'1,240 hrs'},{author:'CasualCarl',text:'Fun with friends but the skill gap is insane now. Still worth playing casually.',rating:3,playtime:'87 hrs'}]},
-{title:_0x2a3f[2],genre:_0x2a3f[3],type:'image',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpapers.com%2Fimages%2Fhd%2Froblox-pictures-kr9dxy2z296bf7b9.jpg&f=1&nofb=1&ipt=cd61772d2e9b4b75088fb91dd107901205cfce29cd2367332f83c130949196e7&ipo=images',reviews:[{author:'BlockyBuilder',text:'Infinite variety of games. You can literally play anything you can imagine.',rating:5,playtime:'2,100 hrs'},{author:'SkepticalSam',text:'Good for kids, but the monetization is aggressive. Quality varies wildly by game.',rating:3,playtime:'45 hrs'}]},
-{title:_0x2a3f[4],genre:_0x2a3f[5],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/359550/header.jpg',reviews:[{author:'TacticalToad',text:'Steep learning curve but the most rewarding FPS I have ever played. Every round feels different.',rating:5,playtime:'890 hrs'},{author:'RageQuitRandy',text:'Toxic community and constant balance changes. Still fun when you have a squad.',rating:3,playtime:'210 hrs'}]},
-{title:_0x2a3f[6],genre:_0x2a3f[7],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg',reviews:[{author:'HeadshotHarry',text:'The purest competitive FPS. No gimmicks, just aim and movement.',rating:5,playtime:'3,400 hrs'},{author:'SkinCollector',text:'Gameplay is solid but the skin economy is a casino. Play for the competition, not the cases.',rating:4,playtime:'560 hrs'}]},
-{title:_0x2a3f[8],genre:_0x2a3f[9],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/1172620/header.jpg',reviews:[{author:'PiratePete',text:'Sailing with friends is the best co-op experience out there. No other game feels like this.',rating:5,playtime:'340 hrs'},{author:'LoneWolf',text:'Terrible solo. You will get sunk constantly. Only buy if you have a crew.',rating:2,playtime:'25 hrs'}]},
-{title:_0x2a3f[10],genre:_0x2a3f[11],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/3240220/header.jpg',reviews:[{author:'LosSantosLocal',text:'The enhanced version looks great on modern hardware. Still the king of open world chaos.',rating:5,playtime:'1,100 hrs'},{author:'OnlineHater',text:'Story mode is excellent. GTA Online is a grindy mess designed to sell shark cards.',rating:3,playtime:'430 hrs'}]},
-{title:_0x2a3f[12],genre:_0x2a3f[13],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/242760/header.jpg',reviews:[{author:'BaseBuilder99',text:'Terrifying and addictive. Building your fortress while cannibals watch is unforgettable.',rating:5,playtime:'78 hrs'},{author:'ScaredyCat',text:'Genuinely scary but the AI is janky. Play with friends for the best experience.',rating:4,playtime:'32 hrs'}]},
-{title:_0x2a3f[14],genre:_0x2a3f[15],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/381210/header.jpg',reviews:[{author:'LoopMaster',text:'Unique asymmetric multiplayer. Chases are thrilling even after hundreds of hours.',rating:5,playtime:'1,800 hrs'},{author:'TunneledAgain',text:'Fun but frustrating. Balance is all over the place and solo queue is painful.',rating:2,playtime:'150 hrs'}]},
-{title:_0x2a3f[16],genre:_0x2a3f[17],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/264710/header.jpg',reviews:[{author:'DeepDiver',text:'Masterpiece of atmosphere and exploration. Thalassophobia never felt so good.',rating:5,playtime:'120 hrs'},{author:'LandLubber',text:'Beautiful but tedious resource gathering. Not for everyone.',rating:3,playtime:'18 hrs'}]},
-{title:_0x2a3f[18],genre:_0x2a3f[11],type:'image',src:'https://cdn.akamai.steamstatic.com/steam/apps/271590/header.jpg',reviews:[{author:'TrevorDidNothingWrong',text:'Best GTA story. The three protagonists are iconic.',rating:5,playtime:'600 hrs'},{author:'ModderMike',text:'Story is great. Online is a money sink. Modding keeps it alive.',rating:4,playtime:'980 hrs'}]}
+var STEAM='https://cdn.akamai.steamstatic.com/steam/apps/';
+var GAMES=[
+{title:'Fortnite',genre:'Battle Royale',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fprod.assets.earlygamecdn.com%2Fimages%2FFortnite-Cash-Cups.jpg%3Ftransform%3DCard%2BPublication%2BWebp&f=1&nofb=1&ipt=632eb13a5bafb87b0265f31939fbd94c47f2dd1c4361956c7a8f37708d4adb17&ipo=images',tags:['Detected via Epic Games']},
+{title:'Roblox',genre:'Sandbox',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpapers.com%2Fimages%2Fhd%2Froblox-pictures-kr9dxy2z296bf7b9.jpg&f=1&nofb=1&ipt=cd61772d2e9b4b75088fb91dd107901205cfce29cd2367332f83c130949196e7&ipo=images',tags:['Detected via Roblox launcher']},
+{title:'Rainbow Six Siege',genre:'Tactical Shooter',steam:359550,premium:true},
+{title:'Counter-Strike 2',genre:'FPS',steam:730,premium:true},
+{title:'Sea of Thieves',genre:'Adventure',steam:1172620},
+{title:'GTA V Enhanced',genre:'Open World',steam:3240220},
+{title:'The Forest',genre:'Survival Horror',steam:242760},
+{title:'Dead by Daylight',genre:'Horror',steam:381210},
+{title:'Subnautica',genre:'Survival',steam:264710},
+{title:'GTA V',genre:'Open World',steam:271590}
 ];
-var _0x6b7c=[
-{title:'Steam',status:'Installed',statusColor:'text-emerald-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%2Fid%2FOIP.JEQ4HBnq2qrPPv6nWSWrbAHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=c6968c19020aed25c88361ea174b73e2e66ff9e6d0f71ff166c77fd76d437f81&ipo=images'},
-{title:'Epic Games',status:'Detected',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%2Fid%2FOIP.wVTBAavRygsfTVE9sbQ6BAHaDt%3Fr%3D0%26pid%3DApi&f=1&ipt=2a56043a06d53a8c589f87246c6480c20a3c4581b479197a9d4197a8ca01d9a6&ipo=images'},
-{title:'Rockstar Games',status:'Detected',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%2Fid%2FOIP.34kryK29m3yf4gvzy5qU_AHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=26e9218766787c5170d5cc94ec29da8f6840f5f372c2061e6077e3640502e873&ipo=images'},
-{title:'Ubisoft Connect',status:'Installed',statusColor:'text-emerald-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstaticctf.ubisoft.com%2FJ3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn%2F6v8ALR81SgkPhJu48ByOdo%2F7c2f1c8b10cff19155f929bb8cbd5843%2Fubi-share.jpg&f=1&nofb=1&ipt=dfd5657d9a498381fddfec8f38044b880b131793cdc7ecf4eea650c2ae421b8a&ipo=images'},
-{title:'EA App',status:'Supported',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%2Fid%2FOIP.AMvGLLRJeo_TtQfqQqB-kQHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=e377fe3c484708fb2bf7d2f5724ab9c97c729695935b4e03f790f9b5ab83dcc1&ipo=images'},
-{title:'GOG Galaxy',status:'Supported',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic0.gamerantimages.com%2Fwordpress%2Fwp-content%2Fuploads%2F2022%2F11%2FnITX3D9g_4x.jpg&f=1&nofb=1&ipt=b3c450ae7c31f8ae368f71a78790d843fe12ae43325dfb893b0fe9060d2775e8&ipo=images'},
-{title:'Riot Client',status:'Supported',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%2Fid%2FOIP.ijysXX6cnHPgJdsM1JImYAHaEK%3Fr%3D0%26pid%3DApi&f=1&ipt=221b36091adcf2352e5ce20ea07d3dc208721aec7d5653811c9c943541979b30&ipo=images'},
-{title:'Battle.net',status:'Supported',statusColor:'text-gray-400',src:'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fbnetcmsus-a.akamaihd.net%2Fcms%2Fblog_header%2Fax%2FAXL77SARNBXB1686342201704.jpg&f=1&nofb=1&ipt=ae0a71e608264fac35fffe7f4ea4cbc4114cc3413902931a031b0d2c9c4cdfa6&ipo=images'}
+var LAUNCHERS=[
+{title:'Steam',status:'Installed',statusColor:'text-emerald-400',icon:'steam',c1:'#1b2838',c2:'#2a6f9e'},
+{title:'Epic Games',status:'Detected',statusColor:'text-gray-400',icon:'epicgames',c1:'#121212',c2:'#3a3a3a'},
+{title:'Rockstar Games',status:'Detected',statusColor:'text-gray-400',icon:'rockstargames',c1:'#2b2100',c2:'#f5a800'},
+{title:'Ubisoft Connect',status:'Installed',statusColor:'text-emerald-400',icon:'ubisoft',c1:'#001a4d',c2:'#0070ff'},
+{title:'EA App',status:'Supported',statusColor:'text-gray-400',icon:'ea',c1:'#3d0a0a',c2:'#ff4747'},
+{title:'GOG Galaxy',status:'Supported',statusColor:'text-gray-400',icon:'gogdotcom',c1:'#2a0b2e',c2:'#86328a'},
+{title:'Riot Client',status:'Supported',statusColor:'text-gray-400',icon:'riotgames',c1:'#3a0a0c',c2:'#d13639'},
+{title:'Battle.net',status:'Supported',statusColor:'text-gray-400',icon:'battledotnet',c1:'#00203f',c2:'#148eff'}
 ];
-var _0x3c4d=0;
-var _0x5f6a=0;
-var _0x6a7b2=document.getElementById('gameMain');
-var _0x1b3c=document.getElementById('mainImageContainer');
-var _0x4a5e=document.getElementById('mainTitle');
-var _0x5e6f=document.getElementById('mainGenre');
-var _0x1c3a=document.getElementById('gameTitle');
-var _0x2d9f=document.getElementById('reviewsContainer');
-var _0x4f2a=document.getElementById('sideLeft');
-var _0x6c7d=document.getElementById('sideRight');
-var _0x1a2b=document.getElementById('prevBtn');
-var _0x3e1b=document.getElementById('nextBtn');
-var _0x2a3f2=document.getElementById('dotsContainer');
-var _0x4b5c2=document.getElementById('launcherMain');
-var _0x6b7c2=document.getElementById('launcherMainImageContainer');
-var _0x1e3f=document.getElementById('launcherMainTitle');
-var _0x2f4a=document.getElementById('launcherMainStatus');
-var _0x3a5b=document.getElementById('launcherTitle');
-var _0x4c6d=document.getElementById('launcherSideLeft');
-var _0x5d7e=document.getElementById('launcherSideRight');
-var _0x6e8f=document.getElementById('launcherPrevBtn');
-var _0x7f9a=document.getElementById('launcherNextBtn');
-var _0x8a1b=document.getElementById('launcherDotsContainer');
-function _0x1c3a2(_0x2d9f2){
-_0x2d9f.innerHTML=_0x2d9f2.map(function(_0x1b3c2){
-var _0x4a5e2='\u2605'.repeat(_0x1b3c2.rating)+'\u2606'.repeat(5-_0x1b3c2.rating);
-return '<div class="p-3 rounded bg-voltrix-surface"><div class="flex items-center justify-between mb-1"><span class="text-xs font-medium text-white">'+_0x1b3c2.author+'</span><span class="text-[10px] text-amber-400 font-mono">'+_0x4a5e2+'</span></div><p class="text-xs text-gray-400 leading-relaxed">'+_0x1b3c2.text+'</p><span class="text-[10px] text-gray-600 mt-1 inline-block">'+_0x1b3c2.playtime+' played</span></div>';
-}).join('');
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function gameImg(g){
+  if(g.steam){var hi=STEAM+g.steam+'/library_600x900_2x.jpg',lo=STEAM+g.steam+'/header.jpg';
+    return '<img src="'+hi+'" alt="'+esc(g.title)+'" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\''+lo+'\'">';}
+  return '<img src="'+g.src+'" alt="'+esc(g.title)+'" loading="lazy" decoding="async">';
 }
-function _0x4b5c3(_0x6b7c2){
-_0x1b3c.innerHTML='<img id="mainImage" src="'+_0x6b7c2.src+'" alt="'+_0x6b7c2.title+'" class="game-cover w-full h-full object-cover">';
-_0x4a5e.textContent=_0x6b7c2.title;
-_0x5e6f.textContent=_0x6b7c2.genre;
-_0x1c3a2(_0x6b7c2.reviews);
+function Carousel(root,items,opt){
+  var stage=root.querySelector('.c3d-stage'),dots=document.getElementById(opt.dots),idx=opt.start||0,n=items.length,timer=null,hover=false;
+  var cards=items.map(function(it,i){
+    var c=document.createElement('div');c.className='c3d-card';
+    c.innerHTML=opt.render(it)+'<div class="glare"></div>';
+    c.addEventListener('click',function(){if(i!==idx)go(i);});
+    c.addEventListener('mousemove',function(e){
+      if(i!==idx)return;var r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+      c.style.transition='transform .12s ease-out';
+      c.style.transform=c.dataset.base+' rotateX('+(-y*14)+'deg) rotateY('+(x*18)+'deg) scale(1.04)';
+      c.style.setProperty('--gx',(x+.5)*100+'%');c.style.setProperty('--gy',(y+.5)*100+'%');
+    });
+    c.addEventListener('mouseleave',function(){c.style.transition='';c.style.transform=c.dataset.base;});
+    stage.appendChild(c);return c;
+  });
+  var dotEls=items.map(function(it,i){var b=document.createElement('button');b.setAttribute('aria-label','Go to '+it.title);
+    b.addEventListener('click',function(){go(i);});dots.appendChild(b);return b;});
+  function layout(){
+    var w=cards[0].offsetWidth||250,sp=w*(window.innerWidth<768?.58:.74);
+    cards.forEach(function(c,i){
+      var d=i-idx;if(d>n/2)d-=n;if(d<-n/2)d+=n;var a=Math.abs(d),s=d<0?-1:1;
+      var ry=a===0?0:-s*(opt.angle+(a-1)*6),tx=d*sp+(a>0?s*w*.12:0),tz=-a*opt.depth;
+      var t='translateX('+tx+'px) translateZ('+tz+'px) rotateY('+ry+'deg)';
+      c.dataset.base=t;c.style.transition='';c.style.transform=t;
+      c.style.opacity=a>3?0:(1-a*.16);c.style.filter=a?'brightness('+(1-a*.25)+') saturate('+(1-a*.15)+')':'none';
+      c.style.zIndex=100-a;c.style.pointerEvents=a>3?'none':'auto';c.classList.toggle('is-active',a===0);
+    });
+    dotEls.forEach(function(b,i){b.classList.toggle('on',i===idx);});
+    if(opt.onChange)opt.onChange(items[idx]);
+  }
+  function go(i){idx=(i+n)%n;layout();restart();}
+  function restart(){clearInterval(timer);if(opt.autoplay)timer=setInterval(function(){if(!hover&&!document.hidden)go(idx+1);},opt.autoplay);}
+  root.querySelector('.c3d-prev').addEventListener('click',function(){go(idx-1);});
+  root.querySelector('.c3d-next').addEventListener('click',function(){go(idx+1);});
+  root.addEventListener('mouseenter',function(){hover=true;});root.addEventListener('mouseleave',function(){hover=false;});
+  var sx=null;
+  stage.addEventListener('pointerdown',function(e){sx=e.clientX;});
+  window.addEventListener('pointerup',function(e){if(sx===null)return;var dx=e.clientX-sx;sx=null;if(Math.abs(dx)>45)go(idx+(dx<0?1:-1));});
+  window.addEventListener('resize',layout);
+  layout();restart();
+  return {next:function(){go(idx+1);},prev:function(){go(idx-1);}};
 }
-function _0x6c7d2(_0x1a2b2,_0x3e1b2){
-if(!_0x1a2b2){_0x3e1b2.innerHTML='';return;}
-_0x3e1b2.innerHTML='<img src="'+_0x1a2b2.src+'" alt="'+_0x1a2b2.title+'" class="w-full aspect-[460/215] object-cover opacity-70">';
-}
-function _0x2d9f3(){
-_0x2a3f2.innerHTML='';
-_0x4b5c.forEach(function(_0x3c4d2,_0x5f6a2){
-var _0x6a7b22=document.createElement('button');
-_0x6a7b22.className='w-1.5 h-1.5 rounded-full transition-colors '+(_0x5f6a2===_0x3c4d?'bg-voltrix-accent':'bg-white/15 hover:bg-white/30');
-_0x6a7b22.setAttribute('aria-label','Go to game '+(_0x5f6a2+1));
-_0x6a7b22.addEventListener('click',function(){
-if(_0x5f6a2!==_0x3c4d){_0x1b3c3(_0x5f6a2);}
+var gInfo=document.getElementById('gameInfo');
+var games=Carousel(document.getElementById('gamesCarousel'),GAMES,{dots:'dotsContainer',start:2,angle:38,depth:170,autoplay:4500,
+  render:function(g){return gameImg(g)+'<div class="shade"></div><div class="label">'+esc(g.title)+'<small>'+esc(g.genre)+'</small></div>';},
+  onChange:function(g){gInfo.classList.add('fading');setTimeout(function(){
+    document.getElementById('mainTitle').textContent=g.title;document.getElementById('mainGenre').textContent=g.genre;
+    var tags=g.premium?['<span class="tag premium"><i class="fa-solid fa-ticket text-[9px]"></i>Premium profile</span>','<span class="tag">Auto-detected</span>']
+      :(g.tags||['Auto-detected','Quick launch']).map(function(t){return '<span class="tag">'+esc(t)+'</span>';});
+    document.getElementById('gameTags').innerHTML=tags.join('');gInfo.classList.remove('fading');},160);}
 });
-_0x2a3f2.appendChild(_0x6a7b22);
+var lInfo=document.getElementById('launcherInfo');
+Carousel(document.getElementById('launchersCarousel'),LAUNCHERS,{dots:'launcherDotsContainer',start:0,angle:40,depth:150,autoplay:3800,
+  render:function(l){return '<div class="launcher-tile" style="background:radial-gradient(circle at 30% 20%,'+l.c2+','+l.c1+' 75%)">'
+    +'<img src="https://cdn.simpleicons.org/'+l.icon+'/ffffff" alt="'+esc(l.title)+'" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'">'
+    +'<span class="fallback">'+esc(l.title)+'</span></div><div class="shade" style="opacity:.55"></div>';},
+  onChange:function(l){lInfo.classList.add('fading');setTimeout(function(){
+    document.getElementById('launcherMainTitle').textContent=l.title;var st=document.getElementById('launcherMainStatus');
+    st.textContent=l.status;st.className='text-xs mt-0.5 '+l.statusColor;lInfo.classList.remove('fading');},160);}
 });
-}
-function _0x2d9f4(){return (_0x3c4d-1+_0x4b5c.length)%_0x4b5c.length;}
-function _0x4a5e3(){return (_0x3c4d+1)%_0x4b5c.length;}
-function _0x1b3c3(_0x5e6f2){
-if(_0x5e6f2===_0x3c4d)return;
-_0x6a7b2.classList.add('switching');
-_0x1c3a.classList.add('switching');
-setTimeout(function(){
-_0x3c4d=_0x5e6f2;
-_0x4b5c3(_0x4b5c[_0x3c4d]);
-_0x6c7d2(_0x4b5c[_0x2d9f4()],_0x4f2a);
-_0x6c7d2(_0x4b5c[_0x4a5e3()],_0x6c7d);
-_0x2d9f3();
-_0x6a7b2.classList.remove('switching');
-_0x1c3a.classList.remove('switching');
-},200);
-}
-function _0x4f2a2(){
-_0x4b5c3(_0x4b5c[_0x3c4d]);
-_0x6c7d2(_0x4b5c[_0x2d9f4()],_0x4f2a);
-_0x6c7d2(_0x4b5c[_0x4a5e3()],_0x6c7d);
-_0x2d9f3();
-}
-_0x1a2b.addEventListener('click',function(){_0x1b3c3(_0x2d9f4());});
-_0x3e1b.addEventListener('click',function(){_0x1b3c3(_0x4a5e3());});
-_0x4f2a.addEventListener('click',function(){_0x1b3c3(_0x2d9f4());});
-_0x6c7d.addEventListener('click',function(){_0x1b3c3(_0x4a5e3());});
-document.addEventListener('keydown',function(_0x5e6f3){
-if(_0x5e6f3.key==='ArrowLeft')_0x1b3c3(_0x2d9f4());
-if(_0x5e6f3.key==='ArrowRight')_0x1b3c3(_0x4a5e3());
+document.addEventListener('keydown',function(e){
+  if(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName))return;
+  if(e.key==='ArrowLeft')games.prev();if(e.key==='ArrowRight')games.next();
 });
-_0x4f2a2();
-function _0x6b7c3(_0x1e3f2){
-_0x6b7c2.innerHTML='<img src="'+_0x1e3f2.src+'" alt="'+_0x1e3f2.title+'" class="game-cover w-full h-full object-cover">';
-_0x1e3f.textContent=_0x1e3f2.title;
-_0x2f4a.textContent=_0x1e3f2.status;
-_0x2f4a.className='text-xs mt-0.5 '+_0x1e3f2.statusColor;
+/* 3D tilt on cards + hero parallax */
+var fine=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+if(fine){
+  document.querySelectorAll('.panel-card,.download-box,#security .panel,#optimization .rounded-lg.overflow-hidden').forEach(function(el){
+    el.classList.add('tilt');var ic=el.querySelector('.w-9.h-9,.w-10.h-10,.fa-windows,.fa-linux');if(ic)ic.classList.add('tilt-pop');
+    el.addEventListener('mousemove',function(e){var r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+      el.style.transform='perspective(900px) rotateX('+(-y*9)+'deg) rotateY('+(x*11)+'deg) translateZ(6px)';});
+    el.addEventListener('mouseleave',function(){el.style.transform='';});
+  });
+  var hero=document.getElementById('heroInner');
+  window.addEventListener('mousemove',function(e){if(window.scrollY>700)return;var x=e.clientX/window.innerWidth-.5,y=e.clientY/window.innerHeight-.5;
+    hero.style.transform='rotateX('+(-y*7)+'deg) rotateY('+(x*9)+'deg)';});
 }
-function _0x3a5b2(_0x4c6d2,_0x5d7e2){
-if(!_0x4c6d2){_0x5d7e2.innerHTML='';return;}
-_0x5d7e2.innerHTML='<img src="'+_0x4c6d2.src+'" alt="'+_0x4c6d2.title+'" class="w-full aspect-[460/215] object-cover opacity-70">';
-}
-function _0x6e8f2(){
-_0x8a1b.innerHTML='';
-_0x6b7c.forEach(function(_0x7f9a2,_0x8a1b2){
-var _0x9b2c=document.createElement('button');
-_0x9b2c.className='w-1.5 h-1.5 rounded-full transition-colors '+(_0x8a1b2===_0x5f6a?'bg-voltrix-accent':'bg-white/15 hover:bg-white/30');
-_0x9b2c.setAttribute('aria-label','Go to launcher '+(_0x8a1b2+1));
-_0x9b2c.addEventListener('click',function(){
-if(_0x8a1b2!==_0x5f6a){_0x5f6a3(_0x8a1b2);}
-});
-_0x8a1b.appendChild(_0x9b2c);
-});
-}
-function _0x6e8f3(){return (_0x5f6a-1+_0x6b7c.length)%_0x6b7c.length;}
-function _0x7f9a3(){return (_0x5f6a+1)%_0x6b7c.length;}
-function _0x5f6a3(_0x8a1b3){
-if(_0x8a1b3===_0x5f6a)return;
-_0x4b5c2.classList.add('switching');
-_0x3a5b.classList.add('switching');
-setTimeout(function(){
-_0x5f6a=_0x8a1b3;
-_0x6b7c3(_0x6b7c[_0x5f6a]);
-_0x3a5b2(_0x6b7c[_0x6e8f3()],_0x4c6d);
-_0x3a5b2(_0x6b7c[_0x7f9a3()],_0x5d7e);
-_0x6e8f2();
-_0x4b5c2.classList.remove('switching');
-_0x3a5b.classList.remove('switching');
-},200);
-}
-function _0x8a1b4(){
-_0x6b7c3(_0x6b7c[_0x5f6a]);
-_0x3a5b2(_0x6b7c[_0x6e8f3()],_0x4c6d);
-_0x3a5b2(_0x6b7c[_0x7f9a3()],_0x5d7e);
-_0x6e8f2();
-}
-_0x6e8f.addEventListener('click',function(){_0x5f6a3(_0x6e8f3());});
-_0x7f9a.addEventListener('click',function(){_0x5f6a3(_0x7f9a3());});
-_0x4c6d.addEventListener('click',function(){_0x5f6a3(_0x6e8f3());});
-_0x5d7e.addEventListener('click',function(){_0x5f6a3(_0x7f9a3());});
-_0x8a1b4();
 var _0x1b3c4='voltrix_reviews';
 var _0x3c4d3=[];
 function _0x5e6f4(){
