@@ -65,6 +65,11 @@ header,section,footer{position:relative;z-index:1}
 .step-image{width:100%;border-radius:.5rem;overflow:hidden;margin-top:.75rem;background:#0f1113}
 .step-image img{width:100%;display:block}
 #downloadCounter{font-family:'JetBrains Mono',monospace}
+.social-icon{transition:transform .2s, color .2s}
+.social-icon:hover{transform:scale(1.1);color:#fff}
+.download-box{border:1px solid rgba(255,255,255,0.05);border-radius:12px;transition:border-color .2s}
+.download-box:hover{border-color:rgba(79,140,255,0.3)}
+.linux-disabled{opacity:.4;pointer-events:none;filter:grayscale(1)}
 </style>
 </head>
 <body class="font-sans antialiased selection:bg-voltrix-accent selection:text-white">
@@ -88,10 +93,16 @@ header,section,footer{position:relative;z-index:1}
 <a href="#licenses" class="hover:text-white transition-colors">Licenses</a>
 <a href="#download" class="hover:text-white transition-colors">Download</a>
 </nav>
-<div class="flex items-center gap-2">
-<a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded hover:bg-white/5 transition-colors flex items-center justify-center text-gray-400 hover:text-voltrix-accent" title="Discord">
-<i class="fa-brands fa-discord"></i>
+<div class="flex items-center gap-4">
+<!-- Social Icons senza bordi -->
+<div class="flex items-center gap-3 mr-2">
+<a href="https://www.tiktok.com/@voltrixtweaks" target="_blank" rel="noopener noreferrer" class="social-icon text-gray-400 hover:text-white" title="TikTok">
+<i class="fa-brands fa-tiktok text-xl"></i>
 </a>
+<a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="social-icon text-gray-400 hover:text-[#5865F2]" title="Discord">
+<i class="fa-brands fa-discord text-xl"></i>
+</a>
+</div>
 <a href="https://gofile.io/d/BkBX3mHK" target="_blank" rel="noopener noreferrer" class="download-btn px-4 py-2 rounded text-sm font-medium bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors flex items-center gap-2">
 <i class="fa-solid fa-download text-xs"></i>
 <span class="hidden sm:inline">Download</span>
@@ -432,17 +443,40 @@ We're working on a code-signing certificate so future builds are signed and this
 <p class="text-gray-400 text-sm max-w-lg mx-auto mb-8">
 Download Voltrix Optimizer for Windows 10 and 11. Unlock the maximum potential of your games in seconds.
 </p>
-<a href="https://gofile.io/d/S9NqW3le" target="_blank" rel="noopener noreferrer" class="download-btn inline-flex px-8 py-3 rounded text-sm font-semibold bg-voltrix-accent hover:bg-[#3d7ae8] text-white transition-colors items-center justify-center gap-2">
-<i class="fa-solid fa-download text-xs"></i>
-<span>Download Voltrix v1.4.1</span>
-</a>
-<div class="mt-4 flex items-center justify-center gap-2 text-xs text-gray-400">
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mt-8">
+  <!-- Windows Download -->
+  <div class="download-box bg-voltrix-bg p-6 flex flex-col items-center">
+    <i class="fa-brands fa-windows text-4xl text-[#0078d7] mb-4"></i>
+    <h3 class="text-white font-semibold text-lg mb-1">Windows 10/11</h3>
+    <p class="text-gray-500 text-xs mb-4">64-bit .exe</p>
+    <a href="https://gofile.io/d/S9NqW3le" target="_blank" rel="noopener noreferrer" class="download-btn w-full px-4 py-2.5 rounded bg-voltrix-accent hover:bg-[#3d7ae8] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+      <i class="fa-solid fa-download text-xs"></i>
+      <span>Download v1.4.1</span>
+    </a>
+  </div>
+
+  <!-- Linux Download (Coming Soon) -->
+  <div class="download-box bg-voltrix-bg p-6 flex flex-col items-center linux-disabled relative">
+    <div class="absolute inset-0 bg-voltrix-bg/50 rounded-xl flex items-center justify-center z-10">
+      <span class="bg-voltrix-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">Coming Soon</span>
+    </div>
+    <i class="fa-brands fa-linux text-4xl text-white mb-4"></i>
+    <h3 class="text-white font-semibold text-lg mb-1">Linux</h3>
+    <p class="text-gray-500 text-xs mb-4">AppImage / .deb</p>
+    <button disabled class="w-full px-4 py-2.5 rounded bg-white/5 text-gray-400 text-sm font-semibold cursor-not-allowed">
+      Coming Soon
+    </button>
+  </div>
+</div>
+
+<div class="mt-8 flex flex-col items-center justify-center gap-2 text-xs text-gray-400">
+<div class="flex items-center gap-2">
 <i class="fa-solid fa-download text-voltrix-accent"></i>
 <span>Total downloads: <span id="downloadCounter">0</span></span>
 </div>
+</div>
 <div class="mt-5 flex items-center justify-center gap-5 text-xs text-gray-500">
-<span class="flex items-center gap-1.5"><i class="fa-brands fa-windows text-gray-400"></i> Windows 10/11 (64-bit)</span>
-<span class="text-gray-700">|</span>
 <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-emerald-500"></i> Safe and verified</span>
 </div>
 </div>
@@ -463,8 +497,13 @@ Download Voltrix Optimizer for Windows 10 and 11. Unlock the maximum potential o
 <a href="#security" class="hover:text-white transition-colors">Security</a>
 <button id="openTerms" class="hover:text-white transition-colors">Terms of Service</button>
 <a href="#download" class="hover:text-white transition-colors">Download</a>
-<a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="hover:text-voltrix-accent transition-colors flex items-center gap-1">
-<i class="fa-brands fa-discord"></i> Discord
+</div>
+<div class="flex items-center gap-4 ml-0 sm:ml-4">
+<a href="https://www.tiktok.com/@voltrixtweaks" target="_blank" rel="noopener noreferrer" class="social-icon text-gray-500 hover:text-white" title="TikTok">
+<i class="fa-brands fa-tiktok text-lg"></i>
+</a>
+<a href="https://discord.gg/cz9ckuZ94" target="_blank" rel="noopener noreferrer" class="social-icon text-gray-500 hover:text-[#5865F2]" title="Discord">
+<i class="fa-brands fa-discord text-lg"></i>
 </a>
 </div>
 </div>
